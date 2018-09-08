@@ -1,0 +1,173 @@
+// app global css
+
+@font-face {
+    font-family: 'RobotoMono-Light';
+    src: url(themes/RobotoMono-Light.ttf)
+}
+
+::selection {
+    background: #63c9f3;
+}
+::-moz-selection {
+    background: #63c9f3;
+}
+
+h1,h2,h3,h4,h5,h6,
+img,
+.q-list-header,
+.q-layout-header,
+.q-popover .q-item-label,
+.q-list-link .q-item,
+.infoBox .text,
+.modal-header,
+footer,
+{
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+.monospace {
+    font-family: 'RobotoMono-Light', monospace
+}
+
+.break-all {
+    word-break: break-all
+}
+
+.ellipsis {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.q-field {
+    margin: 20px 0;
+
+    &.q-ma-none {
+        margin: 0;
+    }
+
+}
+
+
+.layout-padding {
+    padding: 15px 16px !important;
+}
+
+.q-item-sublabel {
+    color: #121212;
+}
+
+.advanced-options-label .q-item-side-right {
+    margin: 0;
+    text-align: left;
+}
+
+.q-layout-header {
+    background: white;
+    box-shadow: none;
+    border-bottom: 1px solid #ddd;
+    height: 48px;
+
+    .q-toolbar-title {
+        font-size: 16px;
+        line-height: 48px;
+        font-weight: 300;
+    }
+
+    &.shift-title {
+        .q-toolbar-title {
+            padding-left: 50px;
+            margin: 0 0 0 16px;
+        }
+    }
+
+    .q-btn.menu {
+        height: 48px;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        z-index: 1;
+        border-radius: 0;
+    }
+    .q-btn.cancel {
+        position: absolute;
+        top: 7px;
+        left: 8px;
+        z-index: 1;
+    }
+
+    .q-toolbar-inverted {
+        background: none;
+        padding-top: 0;
+    }
+
+    .q-tabs {
+        padding-left: 50px;
+
+        .q-tabs-head {
+            padding: 0;
+            background: none;
+        }
+
+        .q-tab {
+            text-transform: none;
+
+            &:hover {
+                background-color: rgba(12,12,12,0.15)
+            }
+
+            .q-icon {
+                font-size: 22px;
+            }
+
+        }
+
+    }
+
+}
+
+.infoBox {
+    height: 75px;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+    margin: 10px 0;
+
+    .infoBoxIcon {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 64px;
+        color: #212529;
+
+        svg {
+            width: 60px;
+            height: 60px;
+        }
+    }
+
+    .infoBoxContent {
+        display: inline-block;
+
+        .text {
+            font-size: 13px;
+            margin-top: 8px;
+            color: #212529;
+            text-transform: uppercase;
+        }
+
+        .value {
+            font-size: 24px;
+            margin-top: 4px;
+            font-weight: 800;
+            color: #212529;
+            font-weight:300;
+        }
+    }
+}
+
+.q-loading + .modal {
+    z-index: 9999 !important;
+}
