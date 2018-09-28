@@ -33,7 +33,7 @@
 
             <img class="q-mb-md" src="statics/ryo-wallet.svg" height="42" />
 
-            <p class="q-my-sm">Version: ATOM v1.0.0-0.3.1.0</p>
+            <p class="q-my-sm">Version: ATOM v1.0.1-0.3.1.1</p>
             <p class="q-my-sm">Copyright (c) 2018, Ryo Currency Project</p>
             <p class="q-my-sm">All rights reserved.</p>
 
