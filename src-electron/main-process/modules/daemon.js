@@ -16,18 +16,21 @@ export class Daemon {
     checkVersion() {
         return new Promise((resolve, reject) => {
             if (process.platform === "win32") {
-                if (!fs.existsSync(path.join(__ryo_bin, "ryod.exe")))
+                let ryod_path = path.join(__ryo_bin, "ryod.exe")
+                let ryod_version_cmd = `"${ryod_path}" --version`
+                if (!fs.existsSync(ryod_path))
                     resolve(false)
-                resolve("ryod.exe found")
-                child_process.exec(path.join(__ryo_bin, "ryod.exe") + " --version", (error, stdout, stderr) => {
+                child_process.exec(ryod_version_cmd, (error, stdout, stderr) => {
                     if(error)
                         resolve(false)
                     resolve(stdout)
                 })
             } else {
-                if (!fs.existsSync(path.join(__ryo_bin, "ryod")))
+                let ryod_path = path.join(__ryo_bin, "ryod")
+                let ryod_version_cmd = `"${ryod_path}" --version`
+                if (!fs.existsSync(ryod_path))
                     resolve(false)
-                child_process.exec(path.join(__ryo_bin, "ryod") + " --version", {detached: true}, (error, stdout, stderr) => {
+                child_process.exec(ryod_version_cmd, {detached: true}, (error, stdout, stderr) => {
                     if(error)
                         resolve(false)
                     resolve(stdout)

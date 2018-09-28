@@ -24,7 +24,7 @@
                 </g>
             </svg>
 
-            <div>Version: ATOM v1.0.0-0.3.1.0</div>
+            <div>Version: ATOM v1.0.1-0.3.1.1</div>
 
             <h6 class="q-mb-md" style="font-weight: 300">Select language:</h6>
 

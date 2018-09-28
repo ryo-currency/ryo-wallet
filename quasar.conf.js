@@ -145,7 +145,7 @@ module.exports = function (ctx) {
             // id: "org.cordova.quasar.app"
         },
         electron: {
-            // bundler: "builder", // or "packager"
+            bundler: "builder", // or "packager"
             extendWebpack(cfg) {
                 // do something with Electron process Webpack cfg
             },
@@ -168,8 +168,32 @@ module.exports = function (ctx) {
             builder: {
                 // https://www.electron.build/configuration/configuration
 
-                // appId: "quasar-app"
+                appId: "com.ryo-currency.wallet",
+                productName: "Ryo Wallet Atom",
+                copyright: "Copyright © 2018 Ryo Currency Project",
 
+                // directories: {
+                //     buildResources: "src-electron/build"
+                // },
+
+                linux: {
+                    target: ["AppImage", "snap", "tar.xz"],
+                    icon: "src-electron/icons/icon_512x512.png",
+                    category: "Finance"
+                },
+
+                mac: {
+                    icon: "src-electron/icons/icon.icns",
+                    category: "public.app-category.finance"
+                },
+
+                dmg: {
+                    background: "src-electron/build/ryo-dmg.tiff"
+                },
+
+                extraResources: [
+                    "bin"
+                ]
             }
         }
     }
