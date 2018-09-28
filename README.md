@@ -1,11 +1,10 @@
 ![Ryo Wallet](https://ryo-currency.com/img/ryo-wallet-screenshots/ryo-wallet.png)
 
-Next Generation GUI Wallet for Ryo-currency  
-Current release: Atom v1.0.0
+Next Generation GUI Wallet for Ryo-currency
 
 ---
 
-Meet the first release of the new, Electron based, Ryo Wallet: Atom v1.0.0. Being the foundation for further development, this initial release already brings several improvements over previous GUI wallet.
+Meet Atom, the new Electron based Ryo Wallet. Being the foundation for further development, this initial release already brings several improvements over previous GUI wallet.
 
 - Wallet switch option.
 You can keep several Ryo wallets on one PC, and switch between them easily - just pick your Ryo wallet from the list and enter your password.
