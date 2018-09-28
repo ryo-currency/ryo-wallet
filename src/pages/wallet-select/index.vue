@@ -100,6 +100,7 @@ export default {
                         this.$router.replace({ path: "/wallet" });
                         break;
                     case -1: // Error
+                    case -22:
                         this.$q.loading.hide()
                         this.$q.notify({
                             type: "negative",
