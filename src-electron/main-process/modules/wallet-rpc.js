@@ -920,6 +920,17 @@ export class WalletRPC {
                filename.endsWith(".unportable"))
                 return
 
+            switch(filename) {
+                case ".DS_Store":
+                case ".DS_Store?":
+                case "._.DS_Store":
+                case ".Spotlight-V100":
+                case ".Trashes":
+                case "ehthumbs.db":
+                case "Thumbs.db":
+                    return
+            }
+
             let wallet_data = {
                 name: filename,
                 address: null,
