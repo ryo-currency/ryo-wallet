@@ -50,6 +50,12 @@ export default [
                     import ("pages/wallet-select/restore")
             },
             {
+                path: "import-view-only",
+                name: "wallet-import-view-only",
+                component: () =>
+                    import ("pages/wallet-select/import-view-only")
+            },
+            {
                 path: "import",
                 name: "wallet-import",
                 component: () =>

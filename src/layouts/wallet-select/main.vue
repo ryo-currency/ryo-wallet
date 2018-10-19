@@ -51,37 +51,23 @@ export default {
             switch(this.$route.name) {
                 case "wallet-create":
                     return "Create new wallet"
-                    break;
                 case "wallet-restore":
                     return "Restore wallet from seed"
-                    break;
                 case "wallet-import":
                     return "Import wallet from file"
-                    break;
+                case "wallet-import-view-only":
+                    return "Restore view-only wallet"
                 case "wallet-import-legacy":
                     return "Import wallet from legacy gui"
-                    break;
                 case "wallet-created":
                     return "Wallet created/restored"
-                    break;
 
                 default:
                 case "wallet-select":
                     return "Ryo"
-                    break;
             }
         }
     },
-    /*
-    watch: {
-        "$route": {
-            deep: true,
-            handler: function (route) {
-                this.page_title = route.name
-            }
-        }
-    },
-    */
     methods: {
         cancel() {
             this.$router.replace({ path: "/wallet-select" });

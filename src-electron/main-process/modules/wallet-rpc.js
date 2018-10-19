@@ -185,6 +185,10 @@ export class WalletRPC {
                 this.restoreWallet(params.name, params.password, params.seed, params.refresh_start_height)
                 break
 
+            case "restore_view_wallet":
+                this.restoreViewWallet(params.name, params.password, params.address, params.viewkey, params.refresh_start_height)
+                break
+
             case "import_wallet":
                 this.importWallet(params.name, params.password, params.path)
                 break
@@ -299,6 +303,34 @@ export class WalletRPC {
             this.finalizeNewWallet(filename)
 
             //});
+
+        });
+    }
+
+    restoreViewWallet(filename, password, address, viewkey, refresh_start_height=0) {
+
+        if(!Number.isInteger(refresh_start_height)) {
+            refresh_start_height = 0
+        }
+
+        this.sendRPC("restore_view_wallet", {
+            filename,
+            password,
+            address,
+            viewkey,
+            refresh_start_height
+        }).then((data) => {
+            if(data.hasOwnProperty("error")) {
+                this.sendGateway("set_wallet_error", {status:data.error})
+                return
+            }
+
+            // store hash of the password so we can check against it later when requesting private keys, or for sending txs
+            this.wallet_state.password_hash = crypto.pbkdf2Sync(password, this.auth[2], 1000, 64, "sha512").toString("hex")
+            this.wallet_state.name = filename
+            this.wallet_state.open = true
+
+            this.finalizeNewWallet(filename)
 
         });
     }

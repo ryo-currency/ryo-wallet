@@ -23,6 +23,10 @@
             <!--<q-item-side avatar="statics/guy-avatar.png" />-->
             <q-item-main label="Restore wallet from seed" />
         </q-item>
+        <q-item @click.native="restoreViewWallet()">
+            <!--<q-item-side avatar="statics/guy-avatar.png" />-->
+            <q-item-main label="Restore view-only wallet" />
+        </q-item>
         <q-item @click.native="importWallet()">
             <!--<q-item-side avatar="statics/guy-avatar.png" />-->
             <q-item-main label="Import wallet from file" />
@@ -81,6 +85,9 @@ export default {
         },
         restoreWallet() {
             this.$router.replace({ path: "wallet-select/restore" });
+        },
+        restoreViewWallet() {
+            this.$router.replace({ path: "wallet-select/import-view-only" });
         },
         importWallet() {
             this.$router.replace({ path: "wallet-select/import" });
