@@ -8,6 +8,7 @@ const crypto = require("crypto");
 export class WalletRPC {
     constructor(backend) {
         this.backend = backend
+        this.data_dir = null
         this.wallet_dir = null
         this.auth = []
         this.id = 0
@@ -75,6 +76,8 @@ export class WalletRPC {
                 ]
 
                 let log_file
+
+                this.data_dir = options.app.data_dir
 
                 if(options.app.testnet) {
                     this.testnet = true
@@ -221,6 +224,10 @@ export class WalletRPC {
                 break
             case "get_private_keys":
                 this.getPrivateKeys(params.password)
+                break
+
+            case "export_key_images":
+                this.exportKeyImages()
                 break
 
             default:
@@ -905,6 +912,26 @@ export class WalletRPC {
         })
     }
 
+
+    exportKeyImages(filepath=null) {
+        this.sendRPC("export_key_images").then((data) => {
+            if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                this.sendGateway("show_notification", {type: "negative", message: "Error exporting key images", timeout: 2000})
+                return
+            }
+
+            if(filepath == null)
+                filepath = path.join(this.data_dir, "gui", "key_image_export.json")
+
+            fs.writeFile(filepath, JSON.stringify(data.result), "utf8", (err) => {
+		if(err) {
+                    this.sendGateway("show_notification", {type: "negative", message: "Error writing key images to file", timeout: 2000})
+                    return
+                }
+                this.sendGateway("show_notification", {message: "Key images exported to "+filepath, timeout: 2000})
+            })
+        })
+    }
 
     listWallets(legacy=false) {
 

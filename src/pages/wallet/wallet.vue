@@ -22,13 +22,31 @@
 
         <div class="infoBox q-pt-md">
             <q-btn
-                 :disable="!is_ready"
-                 flat @click="getPrivateKeys()">Show seed words</q-btn>
+                :disable="!is_ready"
+                flat @click="getPrivateKeys()">Show seed words</q-btn>
             <q-btn
-                 :disable="!is_ready"
-                 flat @click="rescan_modal_show = true">Rescan Wallet</q-btn>
-        </div>
+                :disable="!is_ready"
+                flat @click="rescan_modal_show = true">Rescan Wallet</q-btn>
 
+            <q-btn icon="more_vert" label="" size="md" flat>
+                <q-popover>
+                    <q-list separator link>
+                        <q-item v-close-overlay @click.native="export_modal_show = true">
+                            <q-item-main>
+                                <q-item-tile label>Export Key Images</q-item-tile>
+                            </q-item-main>
+                        </q-item>
+                        <q-item v-close-overlay @click.native="importKeyImages">
+                            <q-item-main>
+                                <q-item-tile label>Import Key Images</q-item-tile>
+                            </q-item-main>
+                        </q-item>
+                    </q-list>
+                </q-popover>
+
+            </q-btn>
+
+        </div>
     </div>
 
 
@@ -58,10 +76,10 @@
             <p>{{ secret.spend_key }}</p>
 
             <q-btn
-                 color="primary"
-                 @click="private_keys_modal_show = false"
-                 label="Close"
-                 />
+                color="primary"
+                @click="private_keys_modal_show = false"
+                label="Close"
+                />
         </div>
     </q-modal>
 
@@ -81,14 +99,47 @@
 
             <div class="q-mt-xl text-right">
                 <q-btn
+                    flat class="q-mr-sm"
+                    @click="rescan_modal_show = false"
+                    label="Close"
+                    />
+                <q-btn
+                    color="primary"
+                    @click="rescanWallet()"
+                    label="Rescan"
+                    />
+            </div>
+        </div>
+    </q-modal>
+
+    <q-modal minimized v-model="export_modal_show">
+        <div class="q-ma-md">
+
+            <h4 class="q-mt-lg q-mb-md">Export key images</h4>
+            <p>Select file location for export.</p>
+
+            <q-field>
+                <div class="row gutter-sm">
+                    <div class="col-8">
+                        <q-input v-model="key_image_path" stack-label="Key image output directory" disable />
+                        <input type="file" webkitdirectory directory id="keyImagePath" v-on:change="setKeyImagePath" ref="fileInput" hidden />
+                    </div>
+                    <div class="col-4">
+                        <q-btn v-on:click="selectFile">Browse</q-btn>
+                    </div>
+                </div>
+            </q-field>
+
+            <div class="q-mt-xl text-right">
+                <q-btn
                      flat class="q-mr-sm"
-                     @click="rescan_modal_show = false"
+                     @click="export_modal_show = false"
                      label="Close"
                      />
                 <q-btn
                      color="primary"
-                     @click="rescanWallet()"
-                     label="Rescan"
+                     @click="exportKeyImages()"
+                     label="Export"
                      />
             </div>
         </div>
@@ -115,7 +166,9 @@ export default {
             spinner: false,
             private_keys_modal_show: false,
             rescan_modal_show: false,
-            rescan_type: "full"
+            rescan_type: "full",
+            key_image_path: null,
+            export_modal_show: false,
         }
     },
     watch: {
@@ -123,7 +176,6 @@ export default {
             handler(val, old) {
                 if(val.view_key == old.view_key) return
                 this.spinner = false
-                console.log(this.secret.view_key)
                 switch(this.secret.view_key) {
                     case "":
                         break
@@ -189,6 +241,16 @@ export default {
             } else {
                 this.$gateway.send("wallet", "rescan_spent")
             }
+        },
+        selectFile () {
+            this.$refs.fileInput.click()
+        },
+        setKeyImagePath (file) {
+            this.key_image_path = file.target.files[0].path
+        },
+        exportKeyImages () {
+            this.export_modal_show = false
+            this.$gateway.send("wallet", "export_key_images", {path: this.key_image_path})
         }
     },
     components: {

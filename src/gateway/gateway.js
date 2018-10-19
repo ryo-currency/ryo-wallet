@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron"
-import { Dialog, Loading } from "quasar"
+import { Notify, Dialog, Loading } from "quasar"
 import { SCEE } from "./SCEE-Node";
 import * as WebSocket from "ws"
 
@@ -116,6 +116,15 @@ export class Gateway {
 
             case "settings_changed_reboot":
                 this.confirmClose("Changes require restart. Would you like to exit now?")
+                break
+
+            case "show_notification":
+                let notification = {
+                    type: "positive",
+                    timeout: 1000,
+                    message: ""
+                }
+                Notify.create(Object.assign(notification, decrypted_data.data))
                 break
 
         }
