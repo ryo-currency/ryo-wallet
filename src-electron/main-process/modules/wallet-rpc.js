@@ -229,9 +229,11 @@ export class WalletRPC {
             case "get_private_keys":
                 this.getPrivateKeys(params.password)
                 break
-
             case "export_key_images":
-                this.exportKeyImages()
+                this.exportKeyImages(params.path)
+                break
+            case "import_key_images":
+                this.importKeyImages(params.path)
                 break
 
             default:
@@ -964,6 +966,36 @@ export class WalletRPC {
             })
         })
     }
+
+    importKeyImages(filepath=null) {
+
+        if(filepath == null)
+            filepath = path.join(this.data_dir, "gui", "key_image_export.json")
+
+        fs.readFile(filepath, "utf8", (err, data) => {
+	    if(err) {
+                this.sendGateway("show_notification", {type: "negative", message: "Error importing key images: file read error", timeout: 2000})
+                return
+            }
+            let key_images = {};
+            try {
+                key_images = JSON.parse(data)
+            } catch (e) {
+                this.sendGateway("show_notification", {type: "negative", message: "Error importing key images: parse error", timeout: 2000})
+                return
+            }
+
+            this.sendRPC("import_key_images", key_images).then((data) => {
+                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                    this.sendGateway("show_notification", {type: "negative", message: "Error importing images", timeout: 2000})
+                    return
+                }
+
+                this.sendGateway("show_notification", {message: "Key images imported", timeout: 2000})
+            })
+        })
+    }
+
 
     listWallets(legacy=false) {
 

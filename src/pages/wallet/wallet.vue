@@ -31,12 +31,12 @@
             <q-btn icon="more_vert" label="" size="md" flat>
                 <q-popover>
                     <q-list separator link>
-                        <q-item v-close-overlay @click.native="export_modal_show = true">
+                        <q-item v-close-overlay @click.native="key_image_modal_show = true; key_image_import_export = 'Export'">
                             <q-item-main>
                                 <q-item-tile label>Export Key Images</q-item-tile>
                             </q-item-main>
                         </q-item>
-                        <q-item v-close-overlay @click.native="importKeyImages">
+                        <q-item v-close-overlay @click.native="key_image_modal_show = true; key_image_import_export = 'Import'">
                             <q-item-main>
                                 <q-item-tile label>Import Key Images</q-item-tile>
                             </q-item-main>
@@ -112,11 +112,11 @@
         </div>
     </q-modal>
 
-    <q-modal minimized v-model="export_modal_show">
+    <q-modal minimized v-model="key_image_modal_show">
         <div class="q-ma-md">
 
-            <h4 class="q-mt-lg q-mb-md">Export key images</h4>
-            <p>Select file location for export.</p>
+            <h4 class="q-mt-lg q-mb-md">{{this.key_image_import_export}} key images</h4>
+            <p>Select file location for key image import/export.</p>
 
             <q-field>
                 <div class="row gutter-sm">
@@ -132,15 +132,15 @@
 
             <div class="q-mt-xl text-right">
                 <q-btn
-                     flat class="q-mr-sm"
-                     @click="export_modal_show = false"
-                     label="Close"
+                    flat class="q-mr-sm"
+                    @click="key_image_modal_show = false"
+                    label="Close"
                      />
                 <q-btn
-                     color="primary"
-                     @click="exportKeyImages()"
-                     label="Export"
-                     />
+                    color="primary"
+                    @click="doKeyImages()"
+                    :label="this.key_image_import_export"
+                    />
             </div>
         </div>
     </q-modal>
@@ -168,7 +168,8 @@ export default {
             rescan_modal_show: false,
             rescan_type: "full",
             key_image_path: null,
-            export_modal_show: false,
+            key_image_modal_show: false,
+            key_image_import_export: "Export",
         }
     },
     watch: {
@@ -248,9 +249,12 @@ export default {
         setKeyImagePath (file) {
             this.key_image_path = file.target.files[0].path
         },
-        exportKeyImages () {
-            this.export_modal_show = false
-            this.$gateway.send("wallet", "export_key_images", {path: this.key_image_path})
+        doKeyImages () {
+            this.key_image_modal_show = false
+            if(this.key_image_import_export == "Export")
+                this.$gateway.send("wallet", "export_key_images", {path: this.key_image_path})
+            else if(this.key_image_import_export == "Import")
+                this.$gateway.send("wallet", "import_key_images", {path: this.key_image_path})
         }
     },
     components: {
