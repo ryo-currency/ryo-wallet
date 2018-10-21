@@ -21,24 +21,26 @@
         </div>
 
         <div class="infoBox q-pt-md">
-            <q-btn
-                :disable="!is_ready"
-                flat @click="getPrivateKeys()">Show seed words</q-btn>
-            <q-btn
-                :disable="!is_ready"
-                flat @click="rescan_modal_show = true">Rescan Wallet</q-btn>
 
-            <q-btn icon="more_vert" label="" size="md" flat>
-                <q-popover>
+            <q-btn icon-right="more_vert" label="Wallet actions" size="md" flat>
+                <q-popover anchor="bottom right" self="top right">
                     <q-list separator link>
-                        <q-item v-close-overlay @click.native="key_image_modal_show = true; key_image_import_export = 'Export'">
+                        <q-item :disabled="!is_ready"
+                                v-close-overlay @click.native="getPrivateKeys()">
                             <q-item-main>
-                                <q-item-tile label>Export Key Images</q-item-tile>
+                                <q-item-tile label>Show Private Keys</q-item-tile>
                             </q-item-main>
                         </q-item>
-                        <q-item v-close-overlay @click.native="key_image_modal_show = true; key_image_import_export = 'Import'">
+                        <q-item :disabled="!is_ready"
+                                v-close-overlay @click.native="showModal('rescan_modal_show')">
                             <q-item-main>
-                                <q-item-tile label>Import Key Images</q-item-tile>
+                                <q-item-tile label>Rescan Wallet</q-item-tile>
+                            </q-item-main>
+                        </q-item>
+                        <q-item :disabled="!is_ready"
+                                v-close-overlay @click.native="showModal('key_image_modal_show')">
+                            <q-item-main>
+                                <q-item-tile label>Manage Key Images</q-item-tile>
                             </q-item-main>
                         </q-item>
                     </q-list>
@@ -64,16 +66,21 @@
 
     <q-modal minimized v-model="private_keys_modal_show" @hide="closePrivateKeys()">
         <div class="q-ma-md">
-            <h6 class="q-mb-xs q-mt-lg">Seed words</h6>
-            <p>{{ secret.mnemonic }}</p>
+
+            <template v-if="secret.mnemonic">
+                <h6 class="q-mb-xs q-mt-lg">Seed words</h6>
+                <p>{{ secret.mnemonic }}</p>
+            </template>
 
             <template v-if="secret.view_key != secret.spend_key">
                 <h6 class="q-mb-xs">View key</h6>
                 <p>{{ secret.view_key }}</p>
             </template>
 
-            <h6 class="q-mb-xs">Spend key</h6>
-            <p>{{ secret.spend_key }}</p>
+            <template v-if="secret.spend_key != '0000000000000000000000000000000000000000000000000000000000000000'">
+                <h6 class="q-mb-xs">Spend key</h6>
+                <p>{{ secret.spend_key }}</p>
+            </template>
 
             <q-btn
                 color="primary"
@@ -115,20 +122,39 @@
     <q-modal minimized v-model="key_image_modal_show">
         <div class="q-ma-md">
 
-            <h4 class="q-mt-lg q-mb-md">{{this.key_image_import_export}} key images</h4>
-            <p>Select file location for key image import/export.</p>
+            <h4 class="q-mt-lg q-mb-md">{{key_image_import_export}} key images</h4>
 
-            <q-field>
-                <div class="row gutter-sm">
-                    <div class="col-8">
-                        <q-input v-model="key_image_path" stack-label="Key image output directory" disable />
-                        <input type="file" webkitdirectory directory id="keyImagePath" v-on:change="setKeyImagePath" ref="fileInput" hidden />
+            <div class="row q-mb-md">
+                <div class="q-mr-xl"><q-radio v-model="key_image_import_export" val="Export" label="Export" /></div>
+                <div><q-radio v-model="key_image_import_export" val="Import" label="Import" /></div>
+            </div>
+
+            <template v-if="key_image_import_export == 'Export'">
+                <q-field style="width:450px">
+                    <div class="row gutter-sm">
+                        <div class="col-9">
+                            <q-input v-model="key_image_export_path" stack-label="Key image export directory" disable />
+                            <input type="file" webkitdirectory directory id="keyImageExportPath" v-on:change="setKeyImageExportPath" ref="keyImageExportSelect" hidden />
+                        </div>
+                        <div class="col-3">
+                            <q-btn class="float-right" v-on:click="selectKeyImageExportPath">Browse</q-btn>
+                        </div>
                     </div>
-                    <div class="col-4">
-                        <q-btn v-on:click="selectFile">Browse</q-btn>
+                </q-field>
+            </template>
+            <template v-if="key_image_import_export == 'Import'">
+                <q-field style="width:450px">
+                    <div class="row gutter-sm">
+                        <div class="col-9">
+                            <q-input v-model="key_image_import_path" stack-label="Key image import file" disable />
+                            <input type="file" id="keyImageImportPath" v-on:change="setKeyImageImportPath" ref="keyImageImportSelect" hidden />
+                        </div>
+                        <div class="col-3">
+                            <q-btn class="float-right" v-on:click="selectKeyImageImportPath">Browse</q-btn>
+                        </div>
                     </div>
-                </div>
-            </q-field>
+                </q-field>
+            </template>
 
             <div class="q-mt-xl text-right">
                 <q-btn
@@ -157,6 +183,7 @@ export default {
     computed: mapState({
         info: state => state.gateway.wallet.info,
         secret: state => state.gateway.wallet.secret,
+        data_dir: state => state.gateway.app.config.app.data_dir,
         is_ready (state) {
             return this.$store.getters["gateway/isReady"]
         }
@@ -167,10 +194,16 @@ export default {
             private_keys_modal_show: false,
             rescan_modal_show: false,
             rescan_type: "full",
-            key_image_path: null,
             key_image_modal_show: false,
             key_image_import_export: "Export",
+            key_image_export_path: '',
+            key_image_import_path: '',
         }
+    },
+    mounted() {
+        const path = require("path")
+        this.key_image_export_path = path.join(this.data_dir, "gui")
+        this.key_image_import_path = path.join(this.data_dir, "gui", "key_image_export.json")
     },
     watch: {
         secret: {
@@ -203,7 +236,12 @@ export default {
         }
     },
     methods: {
+        showModal (which) {
+            if(!this.is_ready) return
+            this[which] = true;
+        },
         getPrivateKeys () {
+            if(!this.is_ready) return
             this.$q.dialog({
                 title: "Show seed words",
                 message: "Enter wallet password to continue.",
@@ -243,18 +281,42 @@ export default {
                 this.$gateway.send("wallet", "rescan_spent")
             }
         },
-        selectFile () {
-            this.$refs.fileInput.click()
+        selectKeyImageExportPath () {
+            this.$refs.keyImageExportSelect.click()
         },
-        setKeyImagePath (file) {
-            this.key_image_path = file.target.files[0].path
+        setKeyImageExportPath (file) {
+            this.key_image_export_path = file.target.files[0].path
+        },
+        selectKeyImageImportPath () {
+            this.$refs.keyImageImportSelect.click()
+        },
+        setKeyImageImportPath (file) {
+            this.key_image_import_path = file.target.files[0].path
         },
         doKeyImages () {
             this.key_image_modal_show = false
-            if(this.key_image_import_export == "Export")
-                this.$gateway.send("wallet", "export_key_images", {path: this.key_image_path})
-            else if(this.key_image_import_export == "Import")
-                this.$gateway.send("wallet", "import_key_images", {path: this.key_image_path})
+
+            this.$q.dialog({
+                title: this.key_image_import_export + " key images",
+                message: "Enter wallet password to continue.",
+                prompt: {
+                    model: "",
+                    type: "password"
+                },
+                ok: {
+                    label: this.key_image_import_export
+                },
+                cancel: {
+                    flat: true,
+                    label: "CANCEL"
+                }
+            }).then(password => {
+                if(this.key_image_import_export == "Export")
+                    this.$gateway.send("wallet", "export_key_images", {password: password, path: this.key_image_export_path})
+                else if(this.key_image_import_export == "Import")
+                    this.$gateway.send("wallet", "import_key_images", {password: password, path: this.key_image_import_path})
+            })
+
         }
     },
     components: {
