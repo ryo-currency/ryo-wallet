@@ -45,6 +45,10 @@ export class Backend {
                 testnet: false
             },
 
+            appearance: {
+                theme: "light"
+            },
+
             daemon: {
                 type: "local_remote",
                 remote_host: "geo.ryoblocks.com",
@@ -123,10 +127,24 @@ export class Backend {
         let params = data.data
 
         switch (data.method) {
+            case "quick_save_config":
+                // save only partial config settings
+                Object.keys(params).map(key => {
+                    this.config_data[key] = Object.assign(this.config_data[key], params[key])
+                })
+                fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), 'utf8', () => {
+                    this.send("set_app_data", {
+                        config: params,
+                        pending_config: params
+                    })
+                })
+                break
+
             case "save_config":
                 // check if config has changed
                 let config_changed = false
                 Object.keys(this.config_data).map(i => {
+                    if(i == "appearance") return
                     Object.keys(this.config_data[i]).map(j => {
                         if(this.config_data[i][j] !== params[i][j])
                             config_changed = true
@@ -140,13 +158,14 @@ export class Backend {
 
                     if(data.method == "save_config_init") {
                         this.startup();
-                    } else if(config_changed) {
+                    } else {
                         this.send("set_app_data", {
                             config: this.config_data,
                             pending_config: this.config_data,
-                        });
-
-                        this.send("settings_changed_reboot")
+                        })
+                        if(config_changed) {
+                            this.send("settings_changed_reboot")
+                        }
                     }
                 });
                 break;

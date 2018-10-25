@@ -4,6 +4,9 @@ export default {
             code: 1 // Connecting to backend
         },
         config: {
+            appearance: {
+                theme: "light"
+            }
         },
         pending_config: {
         }

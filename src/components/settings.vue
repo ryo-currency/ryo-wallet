@@ -3,32 +3,49 @@
     <q-modal-layout>
         <q-toolbar slot="header" color="dark" inverted>
             <q-btn flat round dense @click="isVisible = false" icon="reply" />
-            <q-toolbar-title>
+            <q-toolbar-title shrink>
                 Settings
             </q-toolbar-title>
+
+            <div class="row col justify-center">
+                <q-btn-toggle
+                    v-model="page"
+                    toggle-color="primary"
+                    size="md"
+                    :options="[
+                              {label: 'General', value: 'general', icon: 'settings'},
+                              {label: 'Appearance', value: 'appearance', icon: 'visibility'},
+                              {label: 'Peers', value: 'peers', icon: 'cloud_queue'},
+                              ]"
+                    />
+            </div>
+
             <q-btn color="primary" @click="save" label="Save" />
         </q-toolbar>
 
-        <div class="sidebar">
-            <q-list link no-border>
-                <q-item @click.native="page = 'general'">
-                    <q-item-side icon="settings" />
-                    <q-item-main label="General" />
-                </q-item>
-                <q-item @click.native="page = 'peers'">
-                    <q-item-side icon="cloud_queue" />
-                    <q-item-main label="Peers" />
-                </q-item>
-            </q-list>
-        </div>
-
-        <div class="body" v-if="page=='general'">
+        <div v-if="page=='general'">
             <div class="q-pa-lg">
                 <SettingsGeneral ref="settingsGeneral"></SettingsGeneral>
             </div>
         </div>
 
-        <div class="body" v-if="page=='peers'">
+        <div v-if="page=='appearance'">
+            <div class="q-pa-md">
+                <h6 class="q-mb-md q-mt-none" style="font-weight: 300">Select Appearance:</h6>
+
+                <q-btn-toggle
+                    v-model="theme"
+                    toggle-color="primary"
+                    size="md"
+                    :options="[
+                              {label: 'Light theme', value: 'light', icon: 'brightness_5'},
+                              {label: 'Dark theme', value: 'dark', icon: 'brightness_2'},
+                              ]"
+                />
+            </div>
+        </div>
+
+        <div v-if="page=='peers'">
             <q-list link no-border>
                 <q-list-header>Peer list</q-list-header>
 
@@ -55,15 +72,28 @@ export default {
     name: "SettingsModal",
     computed: mapState({
         daemon: state => state.gateway.daemon,
-        pending_config: state => state.gateway.app.pending_config
+        pending_config: state => state.gateway.app.pending_config,
+        config: state => state.gateway.app.config
     }),
     data () {
         return {
             page: "general",
+            theme: null,
             isVisible: false,
         }
     },
+    mounted: function () {
+        this.theme = this.config.appearance.theme
+    },
     watch: {
+        theme: function (theme, old) {
+            if(old == null) return
+            this.$gateway.send("core", "quick_save_config", {
+                appearance: {
+                    theme: this.theme
+                }
+            })
+        },
         isVisible: function () {
             if(this.isVisible == false) {
                 this.$store.dispatch("gateway/resetPendingConfig")
@@ -101,22 +131,6 @@ export default {
 </script>
 
 <style lang="scss">
-.settings-modal {
-    .sidebar {
-        /*
-        position:absolute;
-        width: 170px;
-        padding: 10px 0;
-       */
-        display:none;
-    }
-    .body {
-        /*
-        margin-left:170px;
-       */
-        padding: 10px 0 10px 10px;
-    }
-}
 .modal-body.modal-message.modal-scroll {
     white-space: pre;
 }

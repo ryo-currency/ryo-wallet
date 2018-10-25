@@ -107,6 +107,17 @@ export default {
     computed: mapState({
         pending_config: state => state.gateway.app.pending_config
     }),
+    data() {
+        return {
+            choose_theme: "light",
+            choose_lang: "EN"
+        }
+    },
+    watch: {
+        choose_theme: function () {
+            this.$gateway.call("set_theme", this.choose_theme)
+        }
+    },
     mounted () {
         // set add status back to 2
         this.$store.commit("gateway/set_app_data", {

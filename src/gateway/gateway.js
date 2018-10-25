@@ -68,7 +68,6 @@ export class Gateway {
 
     }
 
-
     send(module, method, data={}) {
         let message = {
             module,
