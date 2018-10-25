@@ -60,6 +60,7 @@ module.exports = function (ctx) {
                 "QInput",
                 "QRadio",
                 "QBtn",
+                "QBtnToggle",
                 "QIcon",
                 "QTabs",
                 "QTab",

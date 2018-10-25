@@ -4,31 +4,32 @@
 
         <q-field class="q-mt-none">
             <q-input
-                 v-model="wallet.name"
-                 float-label="New wallet name"
-                 @blur="$v.wallet.name.$touch"
-                 :error="$v.wallet.name.$error"
-                 />
+                v-model="wallet.name"
+                float-label="New wallet name"
+                @blur="$v.wallet.name.$touch"
+                :error="$v.wallet.name.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
             <div class="row gutter-sm">
-                <div class="col-8">
-                    <q-input v-model="wallet.path" stack-label="Wallet file" disable />
+                <div class="col">
+                    <q-input v-model="wallet.path" stack-label="Wallet file" disable :dark="theme=='dark'" />
                     <input type="file" id="walletPath" v-on:change="setWalletPath" ref="fileInput" hidden />
                 </div>
-                <div class="col-4">
-                    <q-btn v-on:click="selectFile">Select wallet file</q-btn>
+                <div class="col-auto">
+                    <q-btn v-on:click="selectFile" class="float-right" :text-color="theme=='dark'?'white':'dark'">Select wallet file</q-btn>
                 </div>
             </div>
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password" type="password" float-label="Password" />
+            <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" />
+            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-btn color="primary" @click="import_wallet" label="Import wallet" />
@@ -53,6 +54,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         status: state => state.gateway.wallet.status,
     }),
     watch: {

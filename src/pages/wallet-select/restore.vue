@@ -3,21 +3,23 @@
     <div class="q-mx-md">
         <q-field class="q-mt-none">
             <q-input
-                 v-model="wallet.name"
-                 float-label="Wallet name"
-                 @blur="$v.wallet.name.$touch"
-                 :error="$v.wallet.name.$error"
-                 />
+                v-model="wallet.name"
+                float-label="Wallet name"
+                @blur="$v.wallet.name.$touch"
+                :error="$v.wallet.name.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
             <q-input
-                 v-model="wallet.seed"
-                 float-label="Mnemonic seed"
-                 type="textarea"
-                 @blur="$v.wallet.seed.$touch"
-                 :error="$v.wallet.seed.$error"
-                 />
+                v-model="wallet.seed"
+                float-label="Mnemonic seed"
+                type="textarea"
+                @blur="$v.wallet.seed.$touch"
+                :error="$v.wallet.seed.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
@@ -25,15 +27,16 @@
                      min="0" float-label="Restore height"
                      @blur="$v.wallet.refresh_start_height.$touch"
                      :error="$v.wallet.refresh_start_height.$error"
+                     :dark="theme=='dark'"
                      />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password" type="password" float-label="Password" />
+            <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" />
+            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-btn color="primary" @click="restore_wallet" label="Restore wallet" />
@@ -58,6 +61,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         status: state => state.gateway.wallet.status,
     }),
     watch: {

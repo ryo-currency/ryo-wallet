@@ -13,7 +13,7 @@
     </div>
 
     <template v-if="address_book_starred.length || address_book.length">
-    <q-list link no-border>
+    <q-list link no-border :dark="theme=='dark'">
 
         <q-item v-for="(entry, index) in address_book_starred" @click.native="details(entry)">
             <q-item-side>
@@ -65,6 +65,7 @@ import Identicon from "components/identicon"
 import AddressBookDetails from "components/address_book_details"
 export default {
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         address_book: state => state.gateway.wallet.address_list.address_book,
         address_book_starred: state => state.gateway.wallet.address_list.address_book_starred,
         is_ready (state) {

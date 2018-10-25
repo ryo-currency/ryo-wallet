@@ -2,13 +2,12 @@
 <div>
 
     <template v-if="tx_list.length === 0">
-
         <p class="q-pa-md q-mb-none">No transactions found</p>
-
     </template>
+
     <template v-else>
         <q-infinite-scroll :handler="loadMore" ref="scroller">
-            <q-list link no-border class="tx-list">
+            <q-list link no-border :dark="theme=='dark'" class="tx-list">
                 <q-item v-for="(tx, index) in tx_list" :key="tx.txid"
                         @click.native="details(tx)" :class="'tx-'+tx.type">
                     <q-item-side>
@@ -75,6 +74,7 @@ export default {
         },
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         current_height: state => state.gateway.daemon.info.height,
         tx_list_all: state => state.gateway.wallet.transactions.tx_list,
         tx_list (state) {
@@ -153,50 +153,4 @@ export default {
 </script>
 
 <style lang="scss">
-.tx-list {
-
-    .q-item.tx-in,
-    .q-item.tx-pool {
-        .q-icon {
-            color: #333;
-        }
-        .q-item-label {
-            color: green;
-        }
-        &>div:last-child {
-            text-align:right;
-            &>div:first-child {
-                span {
-                    color: green;
-                    &:before {
-                        content: "+";
-                        color: green;
-                    }
-                }
-            }
-        }
-    }
-
-    .q-item.tx-out,
-    .q-item.tx-pending {
-        .q-icon {
-            color: #333;
-        }
-        .q-item-label {
-            color: purple;
-        }
-        &>div:last-child {
-            text-align:right;
-            &>div:first-child {
-                span {
-                    color: purple;
-                    &:before {
-                        content: "-";
-                        color: purple;
-                    }
-                }
-            }
-        }
-    }
-}
 </style>

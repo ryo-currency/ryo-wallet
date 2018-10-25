@@ -19,13 +19,13 @@
 
             <div class="col">
                 <q-field class="q-ma-none">
-                    <q-input v-model="newTx.amount" float-label="Amount"
+                    <q-input v-model="newTx.amount" float-label="Amount" :dark="theme=='dark'"
                              type="number" min="0" :max="unlocked_balance / 1e9" />
                 </q-field>
             </div>
 
             <div>
-                <q-btn @click="newTx.amount = unlocked_balance / 1e9">All coins</q-btn>
+                <q-btn @click="newTx.amount = unlocked_balance / 1e9" :text-color="theme=='dark'?'white':'dark'">All coins</q-btn>
             </div>
 
         </div>
@@ -37,6 +37,7 @@
             <q-item-main>
                 <q-field>
                     <q-input v-model="newTx.address" float-label="Address"
+                             :dark="theme=='dark'"
                              @blur="$v.newTx.address.$touch"
                              :error="$v.newTx.address.$error"
                              />
@@ -46,6 +47,7 @@
 
         <q-field style="margin-top:0">
             <q-input v-model="newTx.payment_id" float-label="Payment ID (optional)"
+                     :dark="theme=='dark'"
                      @blur="$v.newTx.payment_id.$touch"
                      :error="$v.newTx.payment_id.$error"
                      />
@@ -55,20 +57,20 @@
 
             <div class="col-6">
                 <q-field>
-                    <q-select
-                         v-model="newTx.mixin"
-                         float-label="Mixin"
-                         :options="mixinOptions"
-                         />
+                    <q-select :dark="theme=='dark'"
+                              v-model="newTx.mixin"
+                              float-label="Mixin"
+                              :options="mixinOptions"
+                              />
                 </q-field>
             </div>
             <div class="col-6">
                 <q-field>
-                    <q-select
-                         v-model="newTx.priority"
-                         float-label="Priority"
-                         :options="priorityOptions"
-                         />
+                    <q-select :dark="theme=='dark'"
+                              v-model="newTx.priority"
+                              float-label="Priority"
+                              :options="priorityOptions"
+                              />
                 </q-field>
             </div>
 
@@ -76,22 +78,22 @@
 
 
         <q-field>
-            <q-checkbox v-model="newTx.address_book.save" label="Save to address book" />
+            <q-checkbox v-model="newTx.address_book.save" label="Save to address book" :dark="theme=='dark'" />
         </q-field>
 
         <div v-if="newTx.address_book.save">
             <q-field>
-                <q-input v-model="newTx.address_book.name" float-label="Name" />
+                <q-input v-model="newTx.address_book.name" float-label="Name" :dark="theme=='dark'" />
             </q-field>
             <q-field>
-                <q-input v-model="newTx.address_book.description" type="textarea" rows="2" float-label="Notes" />
+                <q-input v-model="newTx.address_book.description" type="textarea" rows="2" float-label="Notes" :dark="theme=='dark'" />
             </q-field>
         </div>
 
         <q-field class="q-pt-sm">
             <q-btn
-                 :disable="!is_ready"
-                 color="primary" @click="send()" label="Send" />
+                :disable="!is_ready"
+                color="primary" @click="send()" label="Send" />
         </q-field>
 
     </div>
@@ -111,6 +113,7 @@ import Identicon from "components/identicon"
 const objectAssignDeep = require("object-assign-deep");
 export default {
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         unlocked_balance: state => state.gateway.wallet.info.unlocked_balance,
         tx_status: state => state.gateway.tx_status,
         is_ready (state) {
@@ -259,7 +262,8 @@ export default {
                 },
                 cancel: {
                     flat: true,
-                    label: "CANCEL"
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
                 }
             }).then(password => {
                 this.$store.commit("gateway/set_tx_status", {
@@ -269,6 +273,7 @@ export default {
                 })
                 let newTx = objectAssignDeep.noMutate(this.newTx, {password})
                 this.$gateway.send("wallet", "transfer", newTx)
+            }).catch(() => {
             })
         }
     },

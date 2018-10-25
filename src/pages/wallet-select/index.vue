@@ -1,7 +1,7 @@
 <template>
 <q-page>
 
-    <q-list link no-border>
+    <q-list link no-border :dark="theme=='dark'">
         <template v-if="wallets.list.length">
             <q-list-header>Open wallet</q-list-header>
             <q-item v-for="wallet in wallets.list" @click.native="openWallet(wallet)">
@@ -16,24 +16,19 @@
             <q-item-separator />
         </template>
         <q-item @click.native="createNewWallet()">
-            <!--<q-item-side avatar="statics/guy-avatar.png" />-->
             <q-item-main label="Create new wallet" />
         </q-item>
         <q-item @click.native="restoreWallet()">
-            <!--<q-item-side avatar="statics/guy-avatar.png" />-->
             <q-item-main label="Restore wallet from seed" />
         </q-item>
         <q-item @click.native="restoreViewWallet()">
-            <!--<q-item-side avatar="statics/guy-avatar.png" />-->
             <q-item-main label="Restore view-only wallet" />
         </q-item>
         <q-item @click.native="importWallet()">
-            <!--<q-item-side avatar="statics/guy-avatar.png" />-->
             <q-item-main label="Import wallet from file" />
         </q-item>
         <template v-if="wallets.legacy.length">
             <q-item @click.native="importLegacyWallet()">
-                <!--<q-item-side avatar="statics/guy-avatar.png" />-->
                 <q-item-main label="Import wallet from legacy gui" />
             </q-item>
         </template>
@@ -47,6 +42,7 @@ import { mapState } from "vuex"
 import Identicon from "components/identicon"
 export default {
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         wallets: state => state.gateway.wallets,
         status: state => state.gateway.wallet.status
     }),
@@ -65,13 +61,16 @@ export default {
                     },
                     cancel: {
                         flat: true,
-                        label: "CANCEL"
+                        label: "CANCEL",
+                        color: this.theme=="dark"?"white":"dark"
                     }
                 }).then(password => {
                     this.$q.loading.show({
                         delay: 0
                     })
                     this.$gateway.send("wallet", "open_wallet", {name: wallet.name, password: password});
+                })
+                .catch(() => {
                 })
             } else {
                 this.$q.loading.show({

@@ -12,7 +12,7 @@
 
     </div>
 
-    <q-list link no-border>
+    <q-list link no-border :dark="theme=='dark'">
 
         <q-list-header>My primary address</q-list-header>
         <q-item v-for="(address, index) in address_list.primary" @click.native="details(address)">
@@ -66,6 +66,7 @@ import Identicon from "components/identicon"
 import AddressDetails from "components/address_details"
 export default {
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         address_list: state => state.gateway.wallet.address_list
     }),
     methods: {

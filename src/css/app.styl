@@ -12,6 +12,31 @@
     background: #63c9f3;
 }
 
+:root {
+    --q-color-primary: #497dc6;
+}
+
+* {
+
+    scrollbar-track-color: #fff;
+    scrollbar-arrow-color: #fff;
+    &::-webkit-scrollbar-corner { background-color: #fff;}
+    &::-webkit-scrollbar-track-piece { background-color: #fff;}
+
+    scrollbar-face-color: #646464;
+    scrollbar-base-color: #646464;
+    scrollbar-3dlight-color: #646464;
+    scrollbar-highlight-color: #646464;
+    scrollbar-shadow-color: #646464;
+    scrollbar-dark-shadow-color: #646464;
+    &::-webkit-scrollbar { width: 8px; height: 8px;}
+    &::-webkit-scrollbar-button {  background-color: #646464; height:0; width: 0; }
+    &::-webkit-scrollbar-track {  background-color: #646464;}
+    &::-webkit-scrollbar-thumb { height: 50px; background-color: #646464; border-radius: 3px;}
+    &::-webkit-resizer { background-color: #646464;}
+}
+
+
 h1,h2,h3,h4,h5,h6,
 img,
 .q-list-header,
@@ -62,6 +87,10 @@ footer,
 .advanced-options-label .q-item-side-right {
     margin: 0;
     text-align: left;
+}
+
+.q-layout-page {
+    min-height: 0 !important;
 }
 
 .q-layout-header {
@@ -170,4 +199,271 @@ footer,
 
 .q-loading + .modal {
     z-index: 9999 !important;
+}
+
+.identicon {
+    box-shadow: inset rgba(255, 255, 255, 0.6) 0 2px 2px, inset rgba(0, 0, 0, 0.3) 0 -2px 6px;
+    border-radius: 2px;
+}
+
+.q-layout-footer.status-footer {
+    border-top: 1px solid #ccc;
+    padding-top: 2px;
+    background: #fff;
+    box-shadow: none;
+    font-size: 12px;
+
+    .status-line {
+        margin-bottom: 5px;
+
+        div {
+            display: inline-block;
+            padding: 0 8px;
+        }
+
+        div:last-child {
+            float:right;
+        }
+    }
+
+    .status-bars {
+
+        div {
+            height: 3px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transition: width 0.5s ease-out;
+        }
+
+        div:first-child {
+            background-color: goldenrod;
+        }
+
+        div:last-child {
+            background-color: green;
+        }
+
+    }
+
+}
+
+
+.tx-list {
+
+    .q-item.tx-in,
+    .q-item.tx-pool {
+        .q-icon {
+            color: #333;
+        }
+        .q-item-label {
+            color: green;
+        }
+        &>div:last-child {
+            text-align:right;
+            &>div:first-child {
+                span {
+                    color: green;
+                    &:before {
+                        content: "+";
+                        color: green;
+                    }
+                }
+            }
+        }
+    }
+
+    .q-item.tx-out,
+    .q-item.tx-pending {
+        .q-icon {
+            color: #333;
+        }
+        .q-item-label {
+            color: purple;
+        }
+        &>div:last-child {
+            text-align:right;
+            &>div:first-child {
+                span {
+                    color: purple;
+                    &:before {
+                        content: "-";
+                        color: purple;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+body.dark {
+
+    &, * {
+        scrollbar-track-color: #111;
+        scrollbar-arrow-color: #111;
+        &::-webkit-scrollbar-corner { background-color: #111;}
+        &::-webkit-scrollbar-track-piece { background-color: #111;}
+    }
+
+    .q-item-sublabel {
+        color: #cecece;
+    }
+    .infoBoxIcon {
+        color: #cecece;
+    }
+
+    .infoBoxContent {
+        .text {
+            color: #cecece;
+        }
+        .value {
+            color: #cecece;
+        }
+    }
+
+    .identicon {
+        box-shadow: inset rgba(0, 0, 0, 0.1) 0 2px 2px, inset rgba(0, 0, 0, 0.3) 0 -2px 6px;
+        border-radius: 2px;
+    }
+
+
+    .q-layout {
+        background: #111;
+        color:#cecece;
+
+
+        .q-layout-header {
+            background: #111;
+            box-shadow: none;
+            border-bottom: 1px solid #333;
+
+        }
+    }
+
+    .q-layout-footer.status-footer {
+        background: #111;
+        color: #cecece;
+        border-top: 1px solid #333;
+    }
+
+    .q-list-dark .q-item,
+    .q-item-dark .q-item,
+    .q-list-header {
+        color: #cecece;
+    }
+
+    .q-stepper-tab.step-waiting,
+    .q-stepper-step-content{
+        color: #cecece;
+    }
+
+
+    .q-popover {
+        background: #222;
+        color:#cecece;
+
+        .q-list-separator > .q-item-division + .q-item-division, .q-item-division + .q-item-separator {
+            border-top: 1px solid #333;
+        }
+
+    }
+
+    .modal.minimized {
+        .q-input {
+            .q-input-target {
+                color: #cecece;
+            }
+            &.q-if:hover:before {
+                color: #cecece;
+            }
+        }
+    }
+
+    .modal {
+
+        .modal-content,
+        .modal-body {
+            background: #111;
+            color:#cecece;
+        }
+
+        .q-layout-header {
+            background: #111;
+            box-shadow: none;
+            border-bottom: 1px solid #333;
+
+            .q-toolbar {
+                &>* {
+                    color: #cecece;
+                }
+            }
+        }
+
+    }
+
+
+    .tx-list {
+
+        .q-item.tx-in,
+        .q-item.tx-pool {
+            .q-icon {
+                color: #cecece;
+            }
+            .q-item-label {
+                color: lightgreen;
+            }
+            &>div:last-child {
+                text-align:right;
+                &>div:first-child {
+                    span {
+                        color: lightgreen;
+                        &:before {
+                            content: "+";
+                            color: lightgreen;
+                        }
+                    }
+                }
+            }
+        }
+
+        .q-item.tx-out,
+        .q-item.tx-pending {
+            .q-icon {
+                color: #cecece;
+            }
+            .q-item-label {
+                color: mediumpurple;
+            }
+            &>div:last-child {
+                text-align:right;
+                &>div:first-child {
+                    span {
+                        color: mediumpurple;
+                        &:before {
+                            content: "-";
+                            color: mediumpurple;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .q-layout-footer.status-footer {
+
+        .status-bars {
+
+            div:first-child {
+                background-color: goldenrod;
+            }
+
+            div:last-child {
+                background-color: #497dc6;
+            }
+
+        }
+
+    }
+
 }

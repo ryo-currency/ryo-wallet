@@ -8,7 +8,7 @@
         </div>
 
         <div class="col-4">
-            <q-select
+            <q-select :dark="theme=='dark'"
                  v-model="tx_type"
                  float-label="Filter by transaction type"
                  :options="tx_type_options"
@@ -39,6 +39,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         tx_list: state => state.gateway.wallet.transactions.tx_list
     }),
 

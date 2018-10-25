@@ -49,18 +49,18 @@
             </div>
 
             <q-btn
-                 color="primary"
-                 @click="showAbout(false)"
-                 label="Close"
-             />
+                color="primary"
+                @click="showAbout(false)"
+                label="Close"
+                />
         </div>
     </q-modal>
 </div>
 </template>
 
 <script>
+import { mapState } from "vuex"
 import SettingsModal from "components/settings"
-
 export default {
     name: "MainMenu",
     props: {
@@ -70,8 +70,9 @@ export default {
             default: false
         }
     },
-    computed: {
-    },
+    computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
+    }),
     methods: {
         openExternal (url) {
             this.$gateway.send("core", "open_url", {url})
@@ -94,7 +95,8 @@ export default {
                 },
                 cancel: {
                     flat: true,
-                    label: "CANCEL"
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
                 }
             }).then(() => {
                 this.$router.replace({ path: "/wallet-select" })
@@ -105,7 +107,7 @@ export default {
                     this.$store.dispatch("gateway/resetWalletData")
                 }, 250);
             }).catch(() => {
-            });
+            })
         },
         exit () {
             this.$gateway.confirmClose("Are you sure you want to exit?")
@@ -126,7 +128,7 @@ export default {
 
         a {
 
-            color: #027be3;
+            color: #497dc6;
             text-decoration: none;
 
             &:hover,

@@ -12,6 +12,14 @@ export class Gateway {
         this.token = null
         this.scee = new SCEE()
 
+        this.app.store.commit("gateway/set_app_data", {
+            config: {
+                appearance: {
+                    theme: "dark"
+                }
+            }
+        });
+
         this.closeDialog = false
 
         this.app.store.commit("gateway/set_app_data", {
@@ -55,7 +63,8 @@ export class Gateway {
             },
             cancel: {
                 flat: true,
-                label: "CANCEL"
+                label: "CANCEL",
+                color: this.app.store.state.gateway.app.config.appearance.theme=="dark"?"white":"dark"
             }
         }).then(() => {
             this.closeDialog = false

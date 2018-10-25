@@ -3,29 +3,32 @@
     <div class="q-mx-md">
         <q-field class="q-mt-none">
             <q-input
-                 v-model="wallet.name"
-                 float-label="Wallet name"
-                 @blur="$v.wallet.name.$touch"
-                 :error="$v.wallet.name.$error"
-                 />
+                v-model="wallet.name"
+                float-label="Wallet name"
+                @blur="$v.wallet.name.$touch"
+                :error="$v.wallet.name.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
             <q-input
-                 v-model="wallet.address"
-                 float-label="Wallet address"
-                 @blur="$v.wallet.address.$touch"
-                 :error="$v.wallet.address.$error"
-                 />
+                v-model="wallet.address"
+                float-label="Wallet address"
+                @blur="$v.wallet.address.$touch"
+                :error="$v.wallet.address.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
             <q-input
-                 v-model="wallet.viewkey"
-                 float-label="Private viewkey"
-                 @blur="$v.wallet.viewkey.$touch"
-                 :error="$v.wallet.viewkey.$error"
-                 />
+                v-model="wallet.viewkey"
+                float-label="Private viewkey"
+                @blur="$v.wallet.viewkey.$touch"
+                :error="$v.wallet.viewkey.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
@@ -33,15 +36,16 @@
                      min="0" float-label="Restore height"
                      @blur="$v.wallet.refresh_start_height.$touch"
                      :error="$v.wallet.refresh_start_height.$error"
+                     :dark="theme=='dark'"
                      />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password" type="password" float-label="Password" />
+            <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" />
+            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-btn color="primary" @click="restore_view_wallet" label="Restore view-only wallet" />
@@ -68,6 +72,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         status: state => state.gateway.wallet.status,
     }),
     watch: {

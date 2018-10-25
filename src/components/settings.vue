@@ -7,7 +7,7 @@
                 Settings
             </q-toolbar-title>
 
-            <div class="row col justify-center">
+            <div class="row col justify-center q-pr-xl">
                 <q-btn-toggle
                     v-model="page"
                     toggle-color="primary"

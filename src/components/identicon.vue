@@ -195,8 +195,4 @@ export default {
 </script>
 
 <style>
-    .identicon {
-    box-shadow: inset rgba(255, 255, 255, 0.6) 0 2px 2px, inset rgba(0, 0, 0, 0.3) 0 -2px 6px;
-    border-radius: 2px;
-    }
 </style>

@@ -11,15 +11,13 @@
                 Edit address book entry
             </q-toolbar-title>
 
-
             <q-btn v-if="mode=='edit'" flat no-ripple @click="cancelEdit()" label="Cancel" />
             <q-btn class="q-ml-sm" color="primary" @click="save()" label="Save" />
-
 
         </q-toolbar>
         <div>
 
-            <q-list no-border>
+            <q-list no-border :dark="theme=='dark'">
 
                 <q-item>
                     <q-item-side class="self-start">
@@ -30,6 +28,7 @@
                             <q-input v-model="newEntry.address" float-label="Address"
                                      @blur="$v.newEntry.address.$touch"
                                      :error="$v.newEntry.address.$error"
+                                     :dark="theme=='dark'"
                                      />
                         </q-field>
                     </q-item-main>
@@ -38,16 +37,16 @@
                 <q-item>
                     <q-item-main>
                         <q-field>
-                            <q-input v-model="newEntry.name" float-label="Name" />
+                            <q-input v-model="newEntry.name" float-label="Name" :dark="theme=='dark'" />
                         </q-field>
                     </q-item-main>
                     <q-item-side class="self-start q-pa-sm">
                         <q-checkbox
-                             v-model="newEntry.starred"
-                             checked-icon="star"
-                             unchecked-icon="star_border"
-                             class="star-entry"
-                             />
+                            v-model="newEntry.starred"
+                            checked-icon="star"
+                            unchecked-icon="star_border"
+                            class="star-entry"
+                            />
                     </q-item-side>
                 </q-item>
 
@@ -57,6 +56,7 @@
                             <q-input v-model="newEntry.payment_id" float-label="Payment ID (optional)"
                                      @blur="$v.newEntry.payment_id.$touch"
                                      :error="$v.newEntry.payment_id.$error"
+                                     :dark="theme=='dark'"
                                      />
                         </q-field>
                     </q-item-main>
@@ -65,7 +65,7 @@
                 <q-item>
                     <q-item-main>
                         <q-field>
-                            <q-input v-model="newEntry.description" type="textarea" float-label="Notes (optional)" />
+                            <q-input v-model="newEntry.description" type="textarea" float-label="Notes (optional)" :dark="theme=='dark'" />
                         </q-field>
                     </q-item-main>
                 </q-item>
@@ -91,9 +91,9 @@
                 Address book details
             </q-toolbar-title>
             <q-btn class="q-mr-sm"
-                 flat no-ripple
-                 :disable="!is_ready"
-                 @click="edit()" label="Edit" />
+                   flat no-ripple
+                   :disable="!is_ready"
+                   @click="edit()" label="Edit" />
             <q-btn color="primary" @click="copyAddress" label="Copy address" />
         </q-toolbar>
         <div class="layout-padding">
@@ -113,7 +113,7 @@
 
                     <div class="non-selectable">
                         <q-icon name="history" size="24px" />
-                        <span class="vertical-middle q-ml-xs">Recent outgoing transactions to this address</span>
+                        <span class="vertical-middle q-ml-xs">Recent transactions with this address</span>
                     </div>
 
                     <TxList type="in" :limit="5" :to-outgoing-address="entry.address" />
@@ -155,6 +155,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         is_ready (state) {
             return this.$store.getters["gateway/isReady"]
         }

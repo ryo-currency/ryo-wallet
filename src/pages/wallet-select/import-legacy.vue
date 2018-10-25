@@ -13,27 +13,28 @@
 
         <q-field class="q-mt-none">
             <q-input
-                 v-model="wallet.name"
-                 float-label="New wallet name"
-                 @blur="$v.wallet.name.$touch"
-                 :error="$v.wallet.name.$error"
-                 />
+                v-model="wallet.name"
+                float-label="New wallet name"
+                @blur="$v.wallet.name.$touch"
+                :error="$v.wallet.name.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
             <div class="row gutter-sm">
                 <div class="col-12">
-                    <q-input v-model="wallet_path" stack-label="Wallet file" disable />
+                    <q-input v-model="wallet_path" stack-label="Wallet file" disable :dark="theme=='dark'" />
                 </div>
             </div>
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password" type="password" float-label="Password" />
+            <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" />
+            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-btn color="primary" @click="import_wallet" label="Import wallet" />
@@ -59,6 +60,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         status: state => state.gateway.wallet.status,
         wallets_legacy: state => state.gateway.wallets.legacy,
         wallet_path (state) {

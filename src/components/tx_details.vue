@@ -3,12 +3,12 @@
     <q-modal-layout>
         <q-toolbar slot="header" color="dark" inverted>
             <q-btn
-                 flat
-                 round
-                 dense
-                 @click="isVisible = false"
-                 icon="reply"
-                 />
+                flat
+                round
+                dense
+                @click="isVisible = false"
+                icon="reply"
+                />
             <q-toolbar-title>
                 Transaction details
             </q-toolbar-title>
@@ -126,14 +126,16 @@
 
             <q-field class="q-mt-md">
                 <q-input
-                     v-model="txNotes" float-label="Transaction notes"
-                     type="textarea" rows="2" />
+                    v-model="txNotes" float-label="Transaction notes"
+                    :dark="theme=='dark'"
+                    type="textarea" rows="2" />
             </q-field>
 
             <q-field class="q-mt-sm">
                 <q-btn
-                     :disable="!is_ready"
-                     @click="saveTxNotes" label="Save tx notes" />
+                    :disable="!is_ready"
+                    :text-color="theme=='dark'?'white':'dark'"
+                    @click="saveTxNotes" label="Save tx notes" />
             </q-field>
 
         </div>
@@ -153,6 +155,7 @@ import FormatRyo from "components/format_ryo"
 export default {
     name: "TxDetails",
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         in_tx_address_used (state) {
             let i
             let used_addresses = state.gateway.wallet.address_list.primary.concat(state.gateway.wallet.address_list.used)

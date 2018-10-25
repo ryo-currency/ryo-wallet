@@ -3,19 +3,21 @@
     <div class="q-mx-md">
         <q-field class="q-mt-none">
             <q-input
-                 v-model="wallet.name"
-                 float-label="Wallet name"
-                 @blur="$v.wallet.name.$touch"
-                 :error="$v.wallet.name.$error"
-                 />
+                v-model="wallet.name"
+                float-label="Wallet name"
+                @blur="$v.wallet.name.$touch"
+                :error="$v.wallet.name.$error"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
             <q-select
-                 v-model="wallet.language"
-                 float-label="Seed language"
-                 :options="languageOptions"
-                 />
+                v-model="wallet.language"
+                float-label="Seed language"
+                :options="languageOptions"
+                :dark="theme=='dark'"
+                />
         </q-field>
 
         <q-field>
@@ -33,11 +35,11 @@
         </p>
 
         <q-field>
-            <q-input v-model="wallet.password" type="password" float-label="Password" />
+            <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" />
+            <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
         <q-btn color="primary" @click="create" label="Create wallet" />
@@ -79,6 +81,7 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         status: state => state.gateway.wallet.status,
     }),
     watch: {

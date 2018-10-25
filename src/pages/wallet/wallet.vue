@@ -52,9 +52,9 @@
     </div>
 
 
-    <div>
+    <h6 class="q-my-none">Recent transactions:</h6>
 
-        <h6 class="q-my-none">Recent transactions:</h6>
+    <div style="margin: 0 -16px;">
 
         <TxList :limit="5" />
 
@@ -161,7 +161,7 @@
                     flat class="q-mr-sm"
                     @click="key_image_modal_show = false"
                     label="Close"
-                     />
+                    />
                 <q-btn
                     color="primary"
                     @click="doKeyImages()"
@@ -181,6 +181,7 @@ import FormatRyo from "components/format_ryo"
 import TxList from "components/tx_list"
 export default {
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         info: state => state.gateway.wallet.info,
         secret: state => state.gateway.wallet.secret,
         data_dir: state => state.gateway.app.config.app.data_dir,
@@ -254,11 +255,13 @@ export default {
                 },
                 cancel: {
                     flat: true,
-                    label: "CANCEL"
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
                 }
             }).then(password => {
                 //this.spinner = true
                 this.$gateway.send("wallet", "get_private_keys", {password})
+            }).catch(() => {
             })
         },
         closePrivateKeys () {
@@ -308,13 +311,15 @@ export default {
                 },
                 cancel: {
                     flat: true,
-                    label: "CANCEL"
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
                 }
             }).then(password => {
                 if(this.key_image_import_export == "Export")
                     this.$gateway.send("wallet", "export_key_images", {password: password, path: this.key_image_export_path})
                 else if(this.key_image_import_export == "Import")
                     this.$gateway.send("wallet", "import_key_images", {password: password, path: this.key_image_import_path})
+            }).catch(() => {
             })
 
         }

@@ -3,7 +3,7 @@
     <q-layout-header class="shift-title">
         <main-menu />
 
-        <q-tabs class="col" align="justify" color="dark" inverted>
+        <q-tabs class="col" align="justify" :color="theme == 'dark' ? 'light' : 'dark'" inverted>
 
             <q-route-tab to="/wallet" default slot="title">
                 <span><q-icon name="attach_money" /> Wallet</span>
@@ -36,19 +36,15 @@
 </template>
 
 <script>
-import {
-    openURL
-} from "quasar"
-
-import {
-    mapState
-} from "vuex"
-
+import { openURL } from "quasar"
+import { mapState } from "vuex"
 import StatusFooter from "components/footer"
 import MainMenu from "components/mainmenu"
-
 export default {
     name: "LayoutDefault",
+    computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
+    }),
     data() {
         return {
             selectedTab: "tab-1",
