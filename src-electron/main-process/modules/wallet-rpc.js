@@ -950,7 +950,7 @@ export class WalletRPC {
     }
 
 
-    exportKeyImages(password, filepath=null) {
+    exportKeyImages(password, filename=null) {
         crypto.pbkdf2(password, this.auth[2], 1000, 64, "sha512", (err, password_hash) => {
             if (err) {
                 this.sendGateway("show_notification", {type: "negative", message: "Internal error", timeout: 2000})
@@ -961,28 +961,25 @@ export class WalletRPC {
                 return
             }
 
-            this.sendRPC("export_key_images").then((data) => {
+            if(filename == null)
+                filename = path.join(this.data_dir, "gui", "key_image_export")
+            else
+                filename = path.join(filename, "key_image_export")
+
+            this.sendRPC("export_key_images", {filename}).then((data) => {
                 if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
                     this.sendGateway("show_notification", {type: "negative", message: "Error exporting key images", timeout: 2000})
                     return
                 }
 
-                if(filepath == null)
-                    filepath = path.join(this.data_dir, "gui", "key_image_export.json")
+                this.sendGateway("show_notification", {message: "Key images exported to "+filename, timeout: 2000})
 
-                fs.writeFile(filepath, JSON.stringify(data.result), "utf8", (err) => {
-		    if(err) {
-                        this.sendGateway("show_notification", {type: "negative", message: "Error writing key images to file", timeout: 2000})
-                        return
-                    }
-                    this.sendGateway("show_notification", {message: "Key images exported to "+filepath, timeout: 2000})
-                })
             })
-
         })
+
     }
 
-    importKeyImages(password, filepath=null) {
+    importKeyImages(password, filename=null) {
         crypto.pbkdf2(password, this.auth[2], 1000, 64, "sha512", (err, password_hash) => {
             if (err) {
                 this.sendGateway("show_notification", {type: "negative", message: "Internal error", timeout: 2000})
@@ -993,33 +990,19 @@ export class WalletRPC {
                 return
             }
 
-            if(filepath == null)
-                filepath = path.join(this.data_dir, "gui", "key_image_export.json")
+            if(filename == null)
+                filename = path.join(this.data_dir, "gui", "key_image_export")
 
-            fs.readFile(filepath, "utf8", (err, data) => {
-	        if(err) {
-                    this.sendGateway("show_notification", {type: "negative", message: "Error importing key images: file read error", timeout: 2000})
-                    return
-                }
-                let key_images = {};
-                try {
-                    key_images = JSON.parse(data)
-                } catch (e) {
-                    this.sendGateway("show_notification", {type: "negative", message: "Error importing key images: parse error", timeout: 2000})
+            this.sendRPC("import_key_images", {filename}).then((data) => {
+                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                    this.sendGateway("show_notification", {type: "negative", message: "Error importing key images", timeout: 2000})
                     return
                 }
 
-                this.sendRPC("import_key_images", key_images).then((data) => {
-                    if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
-                        this.sendGateway("show_notification", {type: "negative", message: "Error importing images", timeout: 2000})
-                        return
-                    }
-
-                    this.sendGateway("show_notification", {message: "Key images imported", timeout: 2000})
-                })
+                this.sendGateway("show_notification", {message: "Key images imported", timeout: 2000})
             })
-
         })
+
     }
 
 

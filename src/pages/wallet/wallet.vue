@@ -204,7 +204,7 @@ export default {
     mounted() {
         const path = require("path")
         this.key_image_export_path = path.join(this.data_dir, "gui")
-        this.key_image_import_path = path.join(this.data_dir, "gui", "key_image_export.json")
+        this.key_image_import_path = path.join(this.data_dir, "gui", "key_image_export")
     },
     watch: {
         secret: {
