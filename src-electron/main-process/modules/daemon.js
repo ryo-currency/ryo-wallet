@@ -136,6 +136,55 @@ export class Daemon {
         })
     }
 
+    handle(data) {
+
+        let params = data.data
+
+        switch (data.method) {
+
+            case "ban_peer":
+                this.banPeer(params.host, params.seconds)
+                break
+
+            default:
+
+        }
+
+    }
+
+    banPeer(host, seconds=3600) {
+
+        let params = {
+            bans: [{
+                host,
+                seconds,
+                ban: true
+            }]
+        }
+
+        this.sendRPC("set_bans", params).then((data) => {
+            if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                this.sendGateway("show_notification", {type: "negative", message: "Error banning peer", timeout: 2000})
+                return
+            }
+
+            let end_time = new Date(Date.now() + seconds * 1000).toLocaleString()
+            this.sendGateway("show_notification", {message: "Banned "+host+" until "+end_time, timeout: 2000})
+
+            this.sendRPC("bans").then((data) => {
+                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                    return
+                }
+                let daemon_info = {
+                    bans: data.result.bans
+                }
+                this.sendGateway("set_daemon_data", daemon_info)
+            })
+
+        })
+
+    }
+
     startHeartbeat() {
         clearInterval(this.heartbeat);
         this.heartbeat = setInterval(() => {
@@ -176,8 +225,12 @@ export class Daemon {
                     daemon_info.tx_pool_backlog = n.result.backlog
                 }
             }
-            this.backend.send("set_daemon_data", daemon_info)
+            this.sendGateway("set_daemon_data", daemon_info)
         })
+    }
+
+    sendGateway(method, data) {
+        this.backend.send(method, data)
     }
 
     sendRPC(method, params={}) {
