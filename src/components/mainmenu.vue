@@ -33,7 +33,7 @@
 
             <img class="q-mb-md" src="statics/ryo-wallet.svg" height="42" />
 
-            <p class="q-my-sm">Version: ATOM v1.0.2-0.3.1.2</p>
+            <p class="q-my-sm">Version: ATOM v{{version}}-v{{daemonVersion}}</p>
             <p class="q-my-sm">Copyright (c) 2018, Ryo Currency Project</p>
             <p class="q-my-sm">All rights reserved.</p>
 
@@ -59,6 +59,7 @@
 </template>
 
 <script>
+import { version, daemonVersion } from "../../package.json"
 import { mapState } from "vuex"
 import SettingsModal from "components/settings"
 export default {
@@ -69,6 +70,16 @@ export default {
             required: false,
             default: false
         }
+    },
+    data() {
+        return {
+            version: "",
+            daemonVersion: ""
+        }
+    },
+    mounted () {
+        this.version = version
+        this.daemonVersion = daemonVersion
     },
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,

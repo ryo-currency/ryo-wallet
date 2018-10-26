@@ -1,6 +1,7 @@
 {
   "name": "ryo-wallet-atom",
-  "version": "1.0.2",
+  "version": "1.1.0",
+  "daemonVersion": "0.3.2.0",
   "description": "Modern GUI interface for Ryo Currency",
   "productName": "Ryo Wallet Atom",
   "cordovaId": "com.ryo-currency.ryo-gui-wallet",

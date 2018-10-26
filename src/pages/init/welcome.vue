@@ -24,7 +24,7 @@
                 </g>
             </svg>
 
-            <div>Version: ATOM v1.0.2-0.3.1.2</div>
+            <div>Version: ATOM v{{version}}-v{{daemonVersion}}</div>
 
             <h6 class="q-mb-md" style="font-weight: 300">Select Appearance:</h6>
 
@@ -114,6 +114,7 @@
 </template>
 
 <script>
+import { version, daemonVersion } from "../../../package.json"
 import { mapState } from "vuex"
 import SettingsGeneral from "components/settings_general"
 export default {
@@ -124,7 +125,9 @@ export default {
     data() {
         return {
             choose_theme: "light",
-            choose_lang: "EN"
+            choose_lang: "EN",
+            version: "",
+            daemonVersion: ""
         }
     },
     watch: {
@@ -139,6 +142,10 @@ export default {
         }
     },
     mounted () {
+
+        this.version = version
+        this.daemonVersion = daemonVersion
+
         // set add status back to 2
         this.$store.commit("gateway/set_app_data", {
             status: {
