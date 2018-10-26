@@ -7,6 +7,7 @@ export class Daemon {
     constructor(backend) {
         this.backend = backend
         this.heartbeat = null
+        this.heartbeat_slow = null
         this.id = 0
         this.testnet = false
         this.local = false // do we have a local daemon ?
@@ -186,26 +187,31 @@ export class Daemon {
     }
 
     startHeartbeat() {
-        clearInterval(this.heartbeat);
+        clearInterval(this.heartbeat)
         this.heartbeat = setInterval(() => {
             this.heartbeatAction()
-        }, this.local ? 2.5 * 1000 : 30 * 1000) // 2.5 seconds for local daemon, 30 seconds for remote
+        }, this.local ? 5 * 1000 : 30 * 1000) // 5 seconds for local daemon, 30 seconds for remote
         this.heartbeatAction()
+
+        clearInterval(this.heartbeat_slow)
+        this.heartbeat_slow = setInterval(() => {
+            this.heartbeatSlowAction()
+        }, 30 * 1000) // 30 seconds
+        this.heartbeatSlowAction()
+
     }
 
     heartbeatAction() {
         let actions = []
+
+        // No difference between local and remote heartbeat action for now
         if(this.local) {
             actions = [
-                this.getRPC("info"),
-                this.getRPC("connections"),
-                this.getRPC("bans"),
-                this.getRPC("txpool_backlog"),
+                this.getRPC("info")
             ]
         } else {
             actions = [
-                this.getRPC("info"),
-                this.getRPC("txpool_backlog"),
+                this.getRPC("info")
             ]
         }
 
@@ -217,7 +223,35 @@ export class Daemon {
                     continue
                 if(n.method == "get_info") {
                     daemon_info.info = n.result
-                } else if (n.method == "get_connections" && n.result.hasOwnProperty("connections")) {
+                }
+            }
+            this.sendGateway("set_daemon_data", daemon_info)
+        })
+    }
+
+    heartbeatSlowAction() {
+        let actions = []
+        if(this.local) {
+            actions = [
+                this.getRPC("connections"),
+                this.getRPC("bans"),
+                //this.getRPC("txpool_backlog"),
+            ]
+        } else {
+            actions = [
+                //this.getRPC("txpool_backlog"),
+            ]
+        }
+
+        if(actions.length === 0) return
+
+        Promise.all(actions).then((data) => {
+            let daemon_info = {
+            }
+            for (let n of data) {
+                if(n == undefined || !n.hasOwnProperty("result") || n.result == undefined)
+                    continue
+                if (n.method == "get_connections" && n.result.hasOwnProperty("connections")) {
                     daemon_info.connections = n.result.connections
                 } else if (n.method == "get_bans" && n.result.hasOwnProperty("bans")) {
                     daemon_info.bans = n.result.bans
