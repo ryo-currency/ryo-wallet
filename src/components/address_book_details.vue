@@ -94,7 +94,11 @@
                    flat no-ripple
                    :disable="!is_ready"
                    @click="edit()" label="Edit" />
-            <q-btn color="primary" @click="sendToAddress" label="Send coins" />
+            <q-btn
+                color="primary"
+                :disabled="view_only"
+                @click="sendToAddress"
+                label="Send coins" />
         </q-toolbar>
         <div class="layout-padding">
 
@@ -154,6 +158,7 @@ export default {
     },
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
+        view_only: state => state.gateway.wallet.info.view_only,
         is_ready (state) {
             return this.$store.getters["gateway/isReady"]
         }

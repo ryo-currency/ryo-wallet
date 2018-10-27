@@ -391,7 +391,8 @@ export class WalletRPC {
                     address: "",
                     balance: 0,
                     unlocked_balance: 0,
-                    height: 0
+                    height: 0,
+                    view_only: false
                 },
                 secret: {
                     mnemonic: "",
@@ -412,6 +413,11 @@ export class WalletRPC {
                     wallet.info.unlocked_balance = n.result.unlocked_balance
                 } else if (n.method == "query_key") {
                     wallet.secret[n.params.key_type] = n.result.key
+                    if(n.params.key_type == "spend_key") {
+                        if(/^0*$/.test(n.result.key)) {
+                            wallet.info.view_only = true
+                        }
+                    }
                 }
             }
 
@@ -463,6 +469,20 @@ export class WalletRPC {
             this.wallet_state.open = true
 
             this.startHeartbeat()
+
+            // Check if we have a view only wallet by querying the spend key
+            this.sendRPC("query_key",  {key_type: "spend_key"}).then((data) => {
+                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                    return
+                }
+                if(/^0*$/.test(data.result.key)) {
+                    this.sendGateway("set_wallet_data", {
+                        info: {
+                            view_only: true
+                        }
+                    })
+                }
+            })
 
         })
     }

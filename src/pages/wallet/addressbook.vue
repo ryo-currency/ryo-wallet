@@ -27,6 +27,7 @@
                 <q-btn
                     color="primary" style="width:25px; margin-right: 10px;"
                     size="sm" icon="call_made"
+                    :disabled="view_only"
                     @click="sendToAddress(entry, $event)">
                     <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
                         Send coins
@@ -47,6 +48,7 @@
                 <q-btn
                     color="primary" style="width:25px; margin-right: 10px;"
                     size="sm" icon="call_made"
+                    :disabled="view_only"
                     @click="sendToAddress(entry, $event)">
                     <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
                         Send coins
@@ -82,6 +84,7 @@ import AddressBookDetails from "components/address_book_details"
 export default {
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
+        view_only: state => state.gateway.wallet.info.view_only,
         address_book: state => state.gateway.wallet.address_list.address_book,
         address_book_starred: state => state.gateway.wallet.address_list.address_book_starred,
         is_ready (state) {
