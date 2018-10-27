@@ -32,6 +32,12 @@
                             </q-item-main>
                         </q-item>
                         <q-item :disabled="!is_ready"
+                                v-close-overlay @click.native="showModal('change_password_modal_show')">
+                            <q-item-main>
+                                <q-item-tile label>Change Password</q-item-tile>
+                            </q-item-main>
+                        </q-item>
+                        <q-item :disabled="!is_ready"
                                 v-close-overlay @click.native="showModal('rescan_modal_show')">
                             <q-item-main>
                                 <q-item-tile label>Rescan Wallet</q-item-tile>
@@ -171,6 +177,38 @@
         </div>
     </q-modal>
 
+    <q-modal minimized v-model="change_password_modal_show" @hide="clearChangePassword()">
+        <div class="q-ma-md">
+
+            <h4 class="q-mt-lg q-mb-md">Change password</h4>
+
+            <q-field>
+                <q-input v-model="change_password_password_old" type="password" float-label="Old Password" :dark="theme=='dark'" />
+            </q-field>
+
+            <q-field>
+                <q-input v-model="change_password_password_new" type="password" float-label="New Password" :dark="theme=='dark'" />
+            </q-field>
+
+            <q-field>
+                <q-input v-model="change_password_password_confirm" type="password" float-label="Confirm New Password" :dark="theme=='dark'" />
+            </q-field>
+
+            <div class="q-mt-xl text-right">
+                <q-btn
+                    flat class="q-mr-sm"
+                    @click="change_password_modal_show = false"
+                    label="Close"
+                    />
+                <q-btn
+                    color="primary"
+                    @click="doChangePassword()"
+                    label="Change"
+                    />
+            </div>
+        </div>
+    </q-modal>
+
 </q-page>
 </template>
 
@@ -199,6 +237,10 @@ export default {
             key_image_import_export: "Export",
             key_image_export_path: '',
             key_image_import_path: '',
+            change_password_modal_show: false,
+            change_password_password_old: "",
+            change_password_password_new: "",
+            change_password_password_confirm: "",
         }
     },
     mounted() {
@@ -295,6 +337,29 @@ export default {
         },
         setKeyImageImportPath (file) {
             this.key_image_import_path = file.target.files[0].path
+        },
+        doChangePassword () {
+
+            let old_password = this.change_password_password_old
+            let new_password = this.change_password_password_new
+            let new_password_confirm = this.change_password_password_confirm
+
+            if(new_password != new_password_confirm) {
+                this.$q.notify({
+                    type: "negative",
+                    timeout: 1000,
+                    message: "New passwords do not match"
+                })
+            } else {
+                this.change_password_modal_show = false
+                this.$gateway.send("wallet", "change_wallet_password", {old_password, new_password})
+            }
+
+        },
+        clearChangePassword () {
+            this.change_password_password_old = ""
+            this.change_password_password_new = ""
+            this.change_password_password_confirm = ""
         },
         doKeyImages () {
             this.key_image_modal_show = false
