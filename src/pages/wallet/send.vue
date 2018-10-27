@@ -113,7 +113,7 @@
 
             <q-field class="q-pt-sm">
                 <q-btn
-                    :disable="!is_ready"
+                    :disable="!is_able_to_send"
                     color="primary" @click="send()" label="Send" />
             </q-field>
 
@@ -142,6 +142,9 @@ export default {
         tx_status: state => state.gateway.tx_status,
         is_ready (state) {
             return this.$store.getters["gateway/isReady"]
+        },
+        is_able_to_send (state) {
+            return this.$store.getters["gateway/isAbleToSend"]
         }
     }),
     data () {
