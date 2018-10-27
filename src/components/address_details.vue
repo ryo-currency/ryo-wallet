@@ -21,8 +21,7 @@
             <template v-if="address != null">
 
                 <AddressHeader :address="address.address"
-                               :header="address.address_index == 0 ? 'Primary address' : 'Sub-address (Index '+address.address_index+')'"
-                               :subheader="address.address"
+                               :title="address.address_index == 0 ? 'Primary address' : 'Sub-address (Index '+address.address_index+')'"
                                :extra="'You have '+(address.used?'used':'not used')+' this address'"
                                />
 

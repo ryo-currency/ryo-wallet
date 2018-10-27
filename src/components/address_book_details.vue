@@ -101,10 +101,9 @@
             <template v-if="entry != null">
 
                 <AddressHeader :address="entry.address"
-                               :header="entry.name"
-                               :subheader="entry.address"
-                               :extra="entry.payment_id ? 'Payment id: '+entry.payment_id : ''"
-                               :extra2="entry.description ? 'Notes: '+entry.description : ''"
+                               :title="entry.name"
+                               :payment_id="entry.payment_id"
+                               :extra="entry.description ? 'Notes: '+entry.description : ''"
                                />
 
 

@@ -1,7 +1,7 @@
 <template>
 <q-page padding>
 
-    <AddressHeader :address="info.address" :header="info.name" :subheader="info.address" />
+    <AddressHeader :address="info.address" :title="info.name" />
 
 
     <div class="row justify-between" style="max-width: 768px">
