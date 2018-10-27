@@ -96,6 +96,7 @@ module.exports = function (ctx) {
             plugins: [
                 "Notify",
                 "Loading",
+                "LocalStorage",
                 "Dialog"
             ]
             // iconSet: ctx.theme.mat ? "material-icons" : "ionicons"

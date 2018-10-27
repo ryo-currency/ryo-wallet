@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron"
-import { Notify, Dialog, Loading } from "quasar"
+import { Notify, Dialog, Loading, LocalStorage } from "quasar"
 import { SCEE } from "./SCEE-Node";
 import * as WebSocket from "ws"
 
@@ -12,13 +12,17 @@ export class Gateway {
         this.token = null
         this.scee = new SCEE()
 
+        let theme = LocalStorage.has("theme") ? LocalStorage.get.item("theme") : "light"
         this.app.store.commit("gateway/set_app_data", {
             config: {
                 appearance: {
-                    theme: "dark"
+                    theme
                 }
             }
         });
+        this.app.store.watch( state => state.gateway.app.config.appearance.theme, (theme) => {
+            LocalStorage.set("theme", theme)
+        })
 
         this.closeDialog = false
 
