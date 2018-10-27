@@ -94,7 +94,7 @@
                    flat no-ripple
                    :disable="!is_ready"
                    @click="edit()" label="Edit" />
-            <q-btn color="primary" @click="copyAddress" label="Copy address" />
+            <q-btn color="primary" @click="sendToAddress" label="Send coins" />
         </q-toolbar>
         <div class="layout-padding">
 
@@ -130,7 +130,6 @@
 
 <script>
 import { mapState } from "vuex"
-const { clipboard } = require("electron")
 import Identicon from "components/identicon"
 import AddressHeader from "components/address_header"
 import TxList from "components/tx_list"
@@ -195,15 +194,8 @@ export default {
             this.close()
         },
         sendToAddress () {
-
-        },
-        copyAddress () {
-            clipboard.writeText(this.entry.address)
-            this.$q.notify({
-                type: "positive",
-                timeout: 1000,
-                message: "Address copied to clipboard"
-            })
+            this.close()
+            this.$router.replace({ path: "send", query: {address: this.entry.address, payment_id: this.entry.payment_id} });
         },
         edit () {
             this.mode = "edit"

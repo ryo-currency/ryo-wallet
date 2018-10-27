@@ -194,9 +194,25 @@ export default {
                 }
             },
             deep: true
+        },
+        $route (to) {
+            if(to.path == "/wallet/send" && to.query.hasOwnProperty("address")) {
+                this.autoFill(to.query)
+            }
+        }
+    },
+    mounted () {
+        if(this.$route.path == "/wallet/send" && this.$route.query.hasOwnProperty("address")) {
+            this.autoFill(this.$route.query)
         }
     },
     methods: {
+
+        autoFill: function (info) {
+            this.newTx.address = info.address
+            this.newTx.payment_id = info.payment_id
+        },
+
         send: function () {
 
             this.$v.newTx.$touch()

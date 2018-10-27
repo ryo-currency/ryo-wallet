@@ -24,6 +24,14 @@
                 <q-item-tile sublabel>{{ entry.name }}</q-item-tile>
             </q-item-main>
             <q-item-side class="self-start">
+                <q-btn
+                    color="primary" style="width:25px; margin-right: 10px;"
+                    size="sm" icon="call_made"
+                    @click="sendToAddress(entry, $event)">
+                    <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                        Send coins
+                    </q-tooltip>
+                </q-btn>
                 <q-icon size="24px" name="star" />
             </q-item-side>
         </q-item>
@@ -36,6 +44,14 @@
                 <q-item-tile sublabel>{{ entry.name }}</q-item-tile>
             </q-item-main>
             <q-item-side class="self-start">
+                <q-btn
+                    color="primary" style="width:25px; margin-right: 10px;"
+                    size="sm" icon="call_made"
+                    @click="sendToAddress(entry, $event)">
+                    <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                        Send coins
+                    </q-tooltip>
+                </q-btn>
                 <q-icon size="24px" name="star_border" />
             </q-item-side>
         </q-item>
@@ -82,6 +98,16 @@ export default {
             this.$refs.addressBookDetails.entry = null
             this.$refs.addressBookDetails.mode = "new"
             this.$refs.addressBookDetails.isVisible = true
+        },
+        sendToAddress (address, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            this.$router.replace({ path: "send", query: {address: address.address, payment_id: address.payment_id} });
         }
     },
     components: {
