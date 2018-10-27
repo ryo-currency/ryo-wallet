@@ -46,10 +46,18 @@ export default {
         daemon_local_pct (state) {
             if(this.config.daemon.type === "remote")
                 return 0
-            return (100 * this.daemon.info.height_without_bootstrap / this.target_height).toFixed(1)
+            let pct = (100 * this.daemon.info.height_without_bootstrap / this.target_height).toFixed(1)
+            if(pct == 100.0 && this.daemon.info.height_without_bootstrap < this.target_height)
+                return 99.9
+            else
+                return pct
         },
         wallet_pct (state) {
-            return (100 * this.wallet.info.height / this.target_height).toFixed(1)
+            let pct = (100 * this.wallet.info.height / this.target_height).toFixed(1)
+            if(pct == 100.0 && this.wallet.info.height < this.target_height)
+                return 99.9
+            else
+                return pct
         },
         status(state) {
             if(this.config.daemon.type === "local") {
@@ -63,6 +71,8 @@ export default {
             } else {
                 if(this.wallet.info.height < this.target_height - 1 && this.wallet.info.height != 0) {
                     return "Scanning..."
+                } else if(this.daemon.info.height_without_bootstrap < this.target_height) {
+                    return "Syncing..."
                 } else {
                     return "Ready"
                 }
