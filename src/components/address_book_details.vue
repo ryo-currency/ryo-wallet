@@ -103,7 +103,7 @@
                 <AddressHeader :address="entry.address"
                                :header="entry.name"
                                :subheader="entry.address"
-                               :extra="/^0*$/.test(entry.payment_id) ? '' : 'Payment id: '+entry.payment_id"
+                               :extra="entry.payment_id ? 'Payment id: '+entry.payment_id : ''"
                                :extra2="entry.description ? 'Notes: '+entry.description : ''"
                                />
 

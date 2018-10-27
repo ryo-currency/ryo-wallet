@@ -78,7 +78,7 @@
             <p class="monospace break-all">{{ tx.txid }}</p>
 
             <h6 class="q-mt-xs q-mb-none text-weight-light">Payment id</h6>
-            <p class="monospace break-all">{{ tx.payment_id }}</p>
+            <p class="monospace break-all">{{ tx.payment_id ? tx.payment_id : 'N/A' }}</p>
 
 
             <div v-if="tx.type=='in' || tx.type=='pool'">
@@ -211,7 +211,7 @@ export default {
                 fee: 0,
                 height: 0,
                 note: "",
-                payment_id: "0000000000000000",
+                payment_id: "",
                 subaddr_index: {major: 0, minor: 0},
                 timestamp: 0,
                 txid: "",

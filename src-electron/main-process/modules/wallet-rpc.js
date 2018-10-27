@@ -839,6 +839,14 @@ export class WalletRPC {
                 if(data.result.hasOwnProperty("pool"))
                     wallet.transactions.tx_list = wallet.transactions.tx_list.concat(data.result.pool)
 
+                for(let i = 0; i < wallet.transactions.tx_list.length; i++) {
+                    if(/^0*$/.test(wallet.transactions.tx_list[i].payment_id)) {
+                        wallet.transactions.tx_list[i].payment_id = ""
+                    } else if(/^0*$/.test(wallet.transactions.tx_list[i].payment_id.substring(16))) {
+                        wallet.transactions.tx_list[i].payment_id = wallet.transactions.tx_list[i].payment_id.substring(0, 16)
+                    }
+                }
+
                 wallet.transactions.tx_list.sort(function(a, b){
                     if(a.timestamp < b.timestamp) return 1
                     if(a.timestamp > b.timestamp) return -1
@@ -882,6 +890,13 @@ export class WalletRPC {
                             entry.name = entry.description
                             entry.description = ""
                         }
+
+                        if(/^0*$/.test(entry.payment_id)) {
+                            entry.payment_id = ""
+                        } else if(/^0*$/.test(entry.payment_id.substring(16))) {
+                            entry.payment_id = entry.payment_id.substring(0, 16)
+                        }
+
                         if(entry.starred)
                             wallet.address_list.address_book_starred.push(entry)
                         else
