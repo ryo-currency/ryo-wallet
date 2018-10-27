@@ -21,21 +21,6 @@ export class WalletRPC {
             balance: null,
             unlocked_balance: null
         }
-        this.wallet_rpc_errors = {
-            "WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR": "Unknown error",
-            "WALLET_RPC_ERROR_CODE_WRONG_ADDRESS": "Invalid address format",
-            "WALLET_RPC_ERROR_CODE_DAEMON_IS_BUSY": "Daemon is busy",
-            "WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR": "Unknown transfer error",
-            "WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID": "Invalid payment ID format",
-            "WALLET_RPC_ERROR_CODE_TRANSFER_TYPE": "Wrong transfer type",
-            "WALLET_RPC_ERROR_CODE_DENIED": "Transaction was denied",
-            "WALLET_RPC_ERROR_CODE_WRONG_TXID": "Wrong transaction ID",
-            "WALLET_RPC_ERROR_CODE_WRONG_SIGNATURE": "Wrong signature",
-            "WALLET_RPC_ERROR_CODE_WRONG_KEY_IMAGE": "Wrong key image",
-            "WALLET_RPC_ERROR_CODE_WRONG_URI": "Wrong URI",
-            "WALLET_RPC_ERROR_CODE_WRONG_INDEX": "Wrong index",
-            "WALLET_RPC_ERROR_CODE_NOT_OPEN": "Wallet not open",
-        }
 
         this.last_height_send_time = Date.now()
 
@@ -602,13 +587,7 @@ export class WalletRPC {
 
                 this.sendRPC("sweep_all", params).then((data) => {
                     if(data.hasOwnProperty("error")) {
-                        let error = "Unknown error"
-                        for(let n of Object.keys(this.wallet_rpc_errors)) {
-                            if(data.error.message.indexOf(n) === 0) {
-                                error = this.wallet_rpc_errors[n]
-                                break
-                            }
-                        }
+                        let error = data.error.message.charAt(0).toUpperCase() + data.error.message.slice(1);
                         this.sendGateway("set_tx_status", {
                             code: -1,
                             message: error,
@@ -639,13 +618,7 @@ export class WalletRPC {
 
                 this.sendRPC("transfer_split", params).then((data) => {
                     if(data.hasOwnProperty("error")) {
-                        let error = "Unknown error"
-                        for(let n of Object.keys(this.wallet_rpc_errors)) {
-                            if(data.error.message.indexOf(n) === 0) {
-                                error = this.wallet_rpc_errors[n]
-                                break
-                            }
-                        }
+                        let error = data.error.message.charAt(0).toUpperCase() + data.error.message.slice(1);
                         this.sendGateway("set_tx_status", {
                             code: -1,
                             message: error,
