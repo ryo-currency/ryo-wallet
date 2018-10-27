@@ -7,7 +7,7 @@
         <q-item-tile label>{{ title }}</q-item-tile>
         <q-item-tile class="monospace break-all" sublabel>{{ address }}</q-item-tile>
         <q-item-tile v-if="payment_id" sublabel>Payment id: {{ payment_id }}</q-item-tile>
-        <q-item-tile v-if="extra" sublabel>{{ extra2 }}</q-item-tile>
+        <q-item-tile v-if="extra" sublabel>{{ extra }}</q-item-tile>
     </q-item-main>
     <q-item-side>
         <q-btn

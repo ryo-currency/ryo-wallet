@@ -23,6 +23,16 @@
                 <q-item-tile class="monospace ellipsis" label>{{ address.address }}</q-item-tile>
                 <q-item-tile sublabel>Primary address</q-item-tile>
             </q-item-main>
+            <q-item-side>
+                <q-btn
+                    color="primary" style="width:25px;"
+                    size="sm" icon="file_copy"
+                    @click="copyAddress(address.address, $event)">
+                    <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                        Copy address
+                    </q-tooltip>
+                </q-btn>
+            </q-item-side>
         </q-item>
 
         <template v-if="address_list.used.length">
@@ -35,6 +45,16 @@
                     <q-item-tile class="monospace ellipsis" label>{{ address.address }}</q-item-tile>
                     <q-item-tile sublabel>Sub-address (Index {{ address.address_index }})</q-item-tile>
                 </q-item-main>
+                <q-item-side>
+                    <q-btn
+                        color="primary" style="width:25px;"
+                        size="sm" icon="file_copy"
+                        @click="copyAddress(address.address, $event)">
+                        <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                            Copy address
+                        </q-tooltip>
+                    </q-btn>
+                </q-item-side>
             </q-item>
         </template>
 
@@ -49,7 +69,17 @@
                     <q-item-tile class="monospace ellipsis" label>{{ address.address }}</q-item-tile>
                     <q-item-tile sublabel>Sub-address (Index {{ address.address_index }})</q-item-tile>
                 </q-item-main>
-            </q-item>
+                <q-item-side>
+                    <q-btn
+                        color="primary" style="width:25px;"
+                        size="sm" icon="file_copy"
+                        @click="copyAddress(address.address, $event)">
+                        <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                            Copy address
+                        </q-tooltip>
+                    </q-btn>
+                </q-item-side>
+           </q-item>
         </template>
 
     </q-list>
@@ -61,6 +91,7 @@
 </style>
 
 <script>
+const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import Identicon from "components/identicon"
 import AddressDetails from "components/address_details"
@@ -73,6 +104,21 @@ export default {
         details (address) {
             this.$refs.addressDetails.address = address;
             this.$refs.addressDetails.isVisible = true;
+        },
+        copyAddress (address, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            clipboard.writeText(address)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Address copied to clipboard"
+            })
         }
     },
     components: {
