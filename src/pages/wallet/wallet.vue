@@ -3,81 +3,78 @@
 
     <AddressHeader :address="info.address" :title="info.name" />
 
+    <div class="row">
 
-    <div class="row justify-between" style="max-width: 768px">
-
-        <div class="infoBox">
-            <div class="infoBoxContent">
-                <div class="text"><span>Balance</span></div>
-                <div class="value"><span><FormatRyo :amount="info.balance" /></span></div>
+        <div style="width: 290px">
+            <div class="infoBox">
+                <div class="infoBoxContent">
+                    <div class="text"><span>Balance</span></div>
+                    <div class="value"><span><FormatRyo :amount="info.balance" /></span></div>
+                </div>
             </div>
         </div>
 
-        <div class="infoBox">
-            <div class="infoBoxContent">
-                <div class="text"><span>Unlocked balance</span></div>
-                <div class="value"><span><FormatRyo :amount="info.unlocked_balance" /></span></div>
+        <div>
+            <div class="infoBox">
+                <div class="infoBoxContent">
+                    <div class="text"><span>Unlocked balance</span></div>
+                    <div class="value"><span><FormatRyo :amount="info.unlocked_balance" /></span></div>
+                </div>
             </div>
         </div>
 
-        <div class="infoBox q-pt-md">
-
-            <q-btn icon-right="more_vert" label="Wallet actions" size="md" flat>
-                <q-popover anchor="bottom right" self="top right">
-                    <q-list separator link>
-                        <q-item :disabled="!is_ready"
-                                v-close-overlay @click.native="getPrivateKeys()">
-                            <q-item-main>
-                                <q-item-tile label>Show Private Keys</q-item-tile>
-                            </q-item-main>
-                        </q-item>
-                        <q-item :disabled="!is_ready"
-                                v-close-overlay @click.native="showModal('change_password_modal_show')">
-                            <q-item-main>
-                                <q-item-tile label>Change Password</q-item-tile>
-                            </q-item-main>
-                        </q-item>
-                        <q-item :disabled="!is_ready"
-                                v-close-overlay @click.native="showModal('rescan_modal_show')">
-                            <q-item-main>
-                                <q-item-tile label>Rescan Wallet</q-item-tile>
-                            </q-item-main>
-                        </q-item>
-                        <q-item :disabled="!is_ready"
-                                v-close-overlay @click.native="showModal('key_image_modal_show')">
-                            <q-item-main>
-                                <q-item-tile label>Manage Key Images</q-item-tile>
-                            </q-item-main>
-                        </q-item>
-                        <q-item :disabled="!is_ready"
-                                v-close-overlay @click.native="deleteWallet()">
-                            <q-item-main>
-                                <q-item-tile label>Delete Wallet</q-item-tile>
-                            </q-item-main>
-                        </q-item>
-                    </q-list>
-                </q-popover>
-
-            </q-btn>
-
+        <div class="col text-right q-mr-sm">
+            <div class="infoBox q-pt-md">
+                <q-btn icon-right="more_vert" label="Wallet actions" size="md" flat>
+                    <q-popover anchor="bottom right" self="top right">
+                        <q-list separator link>
+                            <q-item :disabled="!is_ready"
+                                    v-close-overlay @click.native="getPrivateKeys()">
+                                <q-item-main>
+                                    <q-item-tile label>Show Private Keys</q-item-tile>
+                                </q-item-main>
+                            </q-item>
+                            <q-item :disabled="!is_ready"
+                                    v-close-overlay @click.native="showModal('change_password')">
+                                <q-item-main>
+                                    <q-item-tile label>Change Password</q-item-tile>
+                                </q-item-main>
+                            </q-item>
+                            <q-item :disabled="!is_ready"
+                                    v-close-overlay @click.native="showModal('rescan')">
+                                <q-item-main>
+                                    <q-item-tile label>Rescan Wallet</q-item-tile>
+                                </q-item-main>
+                            </q-item>
+                            <q-item :disabled="!is_ready"
+                                    v-close-overlay @click.native="showModal('key_image')">
+                                <q-item-main>
+                                    <q-item-tile label>Manage Key Images</q-item-tile>
+                                </q-item-main>
+                            </q-item>
+                            <q-item :disabled="!is_ready"
+                                    v-close-overlay @click.native="deleteWallet()">
+                                <q-item-main>
+                                    <q-item-tile label>Delete Wallet</q-item-tile>
+                                </q-item-main>
+                            </q-item>
+                        </q-list>
+                    </q-popover>
+                </q-btn>
+            </div>
         </div>
+
     </div>
-
 
     <h6 class="q-my-none">Recent transactions:</h6>
 
     <div style="margin: 0 -16px;">
-
         <TxList :limit="5" />
-
     </div>
 
-    <q-inner-loading :visible="spinner">
-        <q-spinner color="primary" :size="30" />
-    </q-inner-loading>
-
-    <q-modal minimized v-model="private_keys_modal_show" @hide="closePrivateKeys()">
-        <div class="q-ma-md">
+    <q-modal minimized v-model="modals.private_keys.visible" @hide="closePrivateKeys()">
+        <div class="modal-header">Show private keys</div>
+        <div class="q-ma-lg">
 
             <template v-if="secret.mnemonic">
                 <h6 class="q-mb-xs q-mt-lg">Seed words</h6>
@@ -89,37 +86,36 @@
                 <p>{{ secret.view_key }}</p>
             </template>
 
-            <template v-if="secret.spend_key != '0000000000000000000000000000000000000000000000000000000000000000'">
+            <template v-if="!/^0*$/.test(secret.spend_key)">
                 <h6 class="q-mb-xs">Spend key</h6>
                 <p>{{ secret.spend_key }}</p>
             </template>
 
             <q-btn
                 color="primary"
-                @click="private_keys_modal_show = false"
+                @click="hideModal('private_keys')"
                 label="Close"
                 />
         </div>
     </q-modal>
 
 
-    <q-modal minimized v-model="rescan_modal_show">
-        <div class="q-ma-md">
-
-            <h4 class="q-mt-lg q-mb-md">Rescan wallet</h4>
+    <q-modal minimized v-model="modals.rescan.visible">
+        <div class="modal-header">Rescan wallet</div>
+        <div class="q-ma-lg">
             <p>Select full rescan or rescan of spent outputs only.</p>
 
             <div class="q-mt-lg">
-                <q-radio v-model="rescan_type" val="full" label="Rescan full blockchain" />
+                <q-radio v-model="modals.rescan.type" val="full" label="Rescan full blockchain" />
             </div>
             <div class="q-mt-sm">
-                <q-radio v-model="rescan_type" val="spent" label="Rescan spent outputs" />
+                <q-radio v-model="modals.rescan.type" val="spent" label="Rescan spent outputs" />
             </div>
 
             <div class="q-mt-xl text-right">
                 <q-btn
                     flat class="q-mr-sm"
-                    @click="rescan_modal_show = false"
+                    @click="hideModal('rescan')"
                     label="Close"
                     />
                 <q-btn
@@ -131,21 +127,23 @@
         </div>
     </q-modal>
 
-    <q-modal minimized v-model="key_image_modal_show">
-        <div class="q-ma-md">
-
-            <h4 class="q-mt-lg q-mb-md">{{key_image_import_export}} key images</h4>
-
+    <q-modal minimized v-model="modals.key_image.visible">
+        <div class="modal-header">{{modals.key_image.type}} key images</div>
+        <div class="q-ma-lg">
             <div class="row q-mb-md">
-                <div class="q-mr-xl"><q-radio v-model="key_image_import_export" val="Export" label="Export" /></div>
-                <div><q-radio v-model="key_image_import_export" val="Import" label="Import" /></div>
+                <div class="q-mr-xl">
+                    <q-radio v-model="modals.key_image.type" val="Export" label="Export" />
+                </div>
+                <div>
+                    <q-radio v-model="modals.key_image.type" val="Import" label="Import" />
+                </div>
             </div>
 
-            <template v-if="key_image_import_export == 'Export'">
+            <template v-if="modals.key_image.type == 'Export'">
                 <q-field style="width:450px">
                     <div class="row gutter-sm">
                         <div class="col-9">
-                            <q-input v-model="key_image_export_path" stack-label="Key image export directory" disable />
+                            <q-input v-model="modals.key_image.export_path" stack-label="Key image export directory" disable />
                             <input type="file" webkitdirectory directory id="keyImageExportPath" v-on:change="setKeyImageExportPath" ref="keyImageExportSelect" hidden />
                         </div>
                         <div class="col-3">
@@ -154,11 +152,11 @@
                     </div>
                 </q-field>
             </template>
-            <template v-if="key_image_import_export == 'Import'">
+            <template v-if="modals.key_image.type == 'Import'">
                 <q-field style="width:450px">
                     <div class="row gutter-sm">
                         <div class="col-9">
-                            <q-input v-model="key_image_import_path" stack-label="Key image import file" disable />
+                            <q-input v-model="modals.key_image.import_path" stack-label="Key image import file" disable />
                             <input type="file" id="keyImageImportPath" v-on:change="setKeyImageImportPath" ref="keyImageImportSelect" hidden />
                         </div>
                         <div class="col-3">
@@ -171,39 +169,37 @@
             <div class="q-mt-xl text-right">
                 <q-btn
                     flat class="q-mr-sm"
-                    @click="key_image_modal_show = false"
+                    @click="hideModal('key_image')"
                     label="Close"
                     />
                 <q-btn
                     color="primary"
                     @click="doKeyImages()"
-                    :label="this.key_image_import_export"
+                    :label="modals.key_image.type"
                     />
             </div>
         </div>
     </q-modal>
 
-    <q-modal minimized v-model="change_password_modal_show" @hide="clearChangePassword()">
-        <div class="q-ma-md">
-
-            <h4 class="q-mt-lg q-mb-md">Change password</h4>
-
+    <q-modal minimized v-model="modals.change_password.visible" @hide="clearChangePassword()">
+        <div class="modal-header">Change password</div>
+        <div class="q-ma-lg">
             <q-field>
-                <q-input v-model="change_password_password_old" type="password" float-label="Old Password" :dark="theme=='dark'" />
+                <q-input v-model="modals.change_password.old_password" type="password" float-label="Old Password" :dark="theme=='dark'" />
             </q-field>
 
             <q-field>
-                <q-input v-model="change_password_password_new" type="password" float-label="New Password" :dark="theme=='dark'" />
+                <q-input v-model="modals.change_password.new_password" type="password" float-label="New Password" :dark="theme=='dark'" />
             </q-field>
 
             <q-field>
-                <q-input v-model="change_password_password_confirm" type="password" float-label="Confirm New Password" :dark="theme=='dark'" />
+                <q-input v-model="modals.change_password.new_password_confirm" type="password" float-label="Confirm New Password" :dark="theme=='dark'" />
             </q-field>
 
             <div class="q-mt-xl text-right">
                 <q-btn
                     flat class="q-mr-sm"
-                    @click="change_password_modal_show = false"
+                    @click="hideModal('change_password')"
                     label="Close"
                     />
                 <q-btn
@@ -235,30 +231,38 @@ export default {
     }),
     data () {
         return {
-            spinner: false,
-            private_keys_modal_show: false,
-            rescan_modal_show: false,
-            rescan_type: "full",
-            key_image_modal_show: false,
-            key_image_import_export: "Export",
-            key_image_export_path: '',
-            key_image_import_path: '',
-            change_password_modal_show: false,
-            change_password_password_old: "",
-            change_password_password_new: "",
-            change_password_password_confirm: "",
+            modals: {
+                private_keys: {
+                    visible: false,
+                },
+                rescan: {
+                    visible: false,
+                    type: "full",
+                },
+                key_image: {
+                    visible: false,
+                    type: "Export",
+                    export_path: "",
+                    import_path: "",
+                },
+                change_password: {
+                    visible: false,
+                    old_password: "",
+                    new_password: "",
+                    new_password_confirm: "",
+                },
+            }
         }
     },
     mounted() {
         const path = require("path")
-        this.key_image_export_path = path.join(this.data_dir, "gui")
-        this.key_image_import_path = path.join(this.data_dir, "gui", "key_image_export")
+        this.modals.key_image.export_path = path.join(this.data_dir, "gui")
+        this.modals.key_image.import_path = path.join(this.data_dir, "gui", "key_image_export")
     },
     watch: {
         secret: {
             handler(val, old) {
                 if(val.view_key == old.view_key) return
-                this.spinner = false
                 switch(this.secret.view_key) {
                     case "":
                         break
@@ -277,7 +281,7 @@ export default {
                         })
                         break
                     default:
-                        this.private_keys_modal_show = true
+                        this.showModal("private_keys")
                         break
                 }
             },
@@ -287,12 +291,15 @@ export default {
     methods: {
         showModal (which) {
             if(!this.is_ready) return
-            this[which] = true;
+            this.modals[which].visible = true
+        },
+        hideModal (which) {
+            this.modals[which].visible = false
         },
         getPrivateKeys () {
             if(!this.is_ready) return
             this.$q.dialog({
-                title: "Show seed words",
+                title: "Show private keys",
                 message: "Enter wallet password to continue.",
                 prompt: {
                     model: "",
@@ -307,13 +314,12 @@ export default {
                     color: this.theme=="dark"?"white":"dark"
                 }
             }).then(password => {
-                //this.spinner = true
                 this.$gateway.send("wallet", "get_private_keys", {password})
             }).catch(() => {
             })
         },
         closePrivateKeys () {
-            this.private_keys_modal_show = false
+            this.hideModal("private_keys")
             setTimeout(() => {
                 this.$store.commit("gateway/set_wallet_data", {
                     secret: {
@@ -325,9 +331,23 @@ export default {
             }, 500)
         },
         rescanWallet () {
-            this.rescan_modal_show = false
-            if(this.rescan_type == "full") {
-                this.$gateway.send("wallet", "rescan_blockchain")
+            this.hideModal("rescan")
+            if(this.modals.rescan.type == "full") {
+                this.$q.dialog({
+                    title: "Rescan wallet",
+                    message: "Warning: Some information about previous transactions\nsuch as the recipient's address will be lost.",
+                    ok: {
+                        label: "RESCAN"
+                    },
+                    cancel: {
+                        flat: true,
+                        label: "CANCEL",
+                        color: this.theme=="dark"?"white":"dark"
+                    }
+                }).then(password => {
+                    this.$gateway.send("wallet", "rescan_blockchain")
+                }).catch(() => {
+                })
             } else {
                 this.$gateway.send("wallet", "rescan_spent")
             }
@@ -336,19 +356,46 @@ export default {
             this.$refs.keyImageExportSelect.click()
         },
         setKeyImageExportPath (file) {
-            this.key_image_export_path = file.target.files[0].path
+            this.modals.key_image.export_path = file.target.files[0].path
         },
         selectKeyImageImportPath () {
             this.$refs.keyImageImportSelect.click()
         },
         setKeyImageImportPath (file) {
-            this.key_image_import_path = file.target.files[0].path
+            this.modals.key_image.import_path = file.target.files[0].path
+        },
+        doKeyImages () {
+            this.hideModal("key_image")
+
+            this.$q.dialog({
+                title: this.modals.key_image.type + " key images",
+                message: "Enter wallet password to continue.",
+                prompt: {
+                    model: "",
+                    type: "password"
+                },
+                ok: {
+                    label: this.modals.key_image.type
+                },
+                cancel: {
+                    flat: true,
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
+                }
+            }).then(password => {
+                if(this.modals.key_image.type == "Export")
+                    this.$gateway.send("wallet", "export_key_images", {password: password, path: this.modals.key_image.export_path})
+                else if(this.modals.key_image.type == "Import")
+                    this.$gateway.send("wallet", "import_key_images", {password: password, path: this.modals.key_image.import_path})
+            }).catch(() => {
+            })
+
         },
         doChangePassword () {
 
-            let old_password = this.change_password_password_old
-            let new_password = this.change_password_password_new
-            let new_password_confirm = this.change_password_password_confirm
+            let old_password = this.modals.change_password.old_password
+            let new_password = this.modals.change_password.new_password
+            let new_password_confirm = this.modals.change_password.new_password_confirm
 
             if(new_password != new_password_confirm) {
                 this.$q.notify({
@@ -357,42 +404,15 @@ export default {
                     message: "New passwords do not match"
                 })
             } else {
-                this.change_password_modal_show = false
+                this.hideModal("change_password")
                 this.$gateway.send("wallet", "change_wallet_password", {old_password, new_password})
             }
 
         },
         clearChangePassword () {
-            this.change_password_password_old = ""
-            this.change_password_password_new = ""
-            this.change_password_password_confirm = ""
-        },
-        doKeyImages () {
-            this.key_image_modal_show = false
-
-            this.$q.dialog({
-                title: this.key_image_import_export + " key images",
-                message: "Enter wallet password to continue.",
-                prompt: {
-                    model: "",
-                    type: "password"
-                },
-                ok: {
-                    label: this.key_image_import_export
-                },
-                cancel: {
-                    flat: true,
-                    label: "CANCEL",
-                    color: this.theme=="dark"?"white":"dark"
-                }
-            }).then(password => {
-                if(this.key_image_import_export == "Export")
-                    this.$gateway.send("wallet", "export_key_images", {password: password, path: this.key_image_export_path})
-                else if(this.key_image_import_export == "Import")
-                    this.$gateway.send("wallet", "import_key_images", {password: password, path: this.key_image_import_path})
-            }).catch(() => {
-            })
-
+            this.modals.change_password.old_password = ""
+            this.modals.change_password.new_password = ""
+            this.modals.change_password.new_password_confirm = ""
         },
         deleteWallet () {
             this.$q.dialog({
