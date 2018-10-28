@@ -32,12 +32,43 @@
         </q-field>
 
         <q-field>
-            <q-input v-model="wallet.refresh_start_height" type="number"
-                     min="0" float-label="Restore height"
-                     @blur="$v.wallet.refresh_start_height.$touch"
-                     :error="$v.wallet.refresh_start_height.$error"
-                     :dark="theme=='dark'"
-                     />
+            <div class="row items-center gutter-sm">
+                <div class="col">
+                    <template v-if="wallet.refresh_type=='date'">
+                        <q-datetime v-model="wallet.refresh_start_date" type="datetime"
+                                    float-label="Restore date"
+                                    modal :min="1492486495000" :max="Date.now()"
+                                    :dark="theme=='dark'"
+                                    />
+                    </template>
+                    <template v-else-if="wallet.refresh_type=='height'">
+                        <q-input v-model="wallet.refresh_start_height" type="number"
+                                 min="0" float-label="Restore height"
+                                 @blur="$v.wallet.refresh_start_height.$touch"
+                                 :error="$v.wallet.refresh_start_height.$error"
+                                 :dark="theme=='dark'"
+                                 />
+                    </template>
+                </div>
+                <div class="col-auto">
+                    <template v-if="wallet.refresh_type=='date'">
+                        <q-btn @click="wallet.refresh_type='height'" class="float-right" :text-color="theme=='dark'?'white':'dark'" flat>
+                            <div style="width: 80px;" class="text-center">
+                                <q-icon class="block" name="calendar_today" />
+                                <div style="font-size:10px">Switch to<br/>height select</div>
+                            </div>
+                        </q-btn>
+                    </template>
+                    <template v-else-if="wallet.refresh_type=='height'">
+                        <q-btn @click="wallet.refresh_type='date'" class="float-right" :text-color="theme=='dark'?'white':'dark'" flat>
+                            <div style="width: 80px;" class="text-center">
+                                <q-icon class="block" name="calendar_today" />
+                                <div style="font-size:10px">Switch to<br/>date select</div>
+                            </div>
+                        </q-btn>
+                    </template>
+                </div>
+            </div>
         </q-field>
 
         <q-field>
@@ -65,7 +96,9 @@ export default {
                 name: "",
                 address: "",
                 viewkey: "",
+                refresh_type: "date",
                 refresh_start_height: 0,
+                refresh_start_date: 1492486495000, // timestamp of block 1
                 password: "",
                 password_confirm: ""
             },

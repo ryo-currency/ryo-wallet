@@ -86,7 +86,8 @@ module.exports = function (ctx) {
                 "QCollapsible",
                 "QCheckbox",
                 "QInnerLoading",
-                "QInfiniteScroll"
+                "QInfiniteScroll",
+                "QDatetime"
             ],
             directives: [
                 "Ripple",

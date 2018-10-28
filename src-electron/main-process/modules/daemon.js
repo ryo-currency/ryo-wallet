@@ -186,6 +186,81 @@ export class Daemon {
 
     }
 
+    timestampToHeight(timestamp, pivot=null, recursion_limit=null) {
+
+        return new Promise((resolve, reject) => {
+
+            if(timestamp > 999999999999) {
+                // We have got a JS ms timestamp, convert
+                timestamp = Math.floor(timestamp / 1000)
+            }
+
+            pivot = pivot || [137500, 1528073506]
+            recursion_limit = recursion_limit || 0;
+
+            let diff = Math.floor((timestamp - pivot[1]) / 240)
+            let estimated_height = pivot[0] + diff
+
+            if(estimated_height <= 0) {
+                return resolve(0)
+            }
+
+            if(recursion_limit > 10) {
+                return resolve(pivot[0])
+            }
+
+            this.getRPC("block_header_by_height", {height: estimated_height}).then((data) => {
+
+                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                    if(data.error.code == -2) { // Too big height
+
+                        this.getRPC("last_block_header").then((data) => {
+                            if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                                return reject()
+                            }
+
+                            let new_pivot = [data.result.block_header.height, data.result.block_header.timestamp]
+
+                            // If we are within an hour that is good enough
+                            // If for some reason there is a > 1h gap between blocks
+                            // the recursion limit will take care of infinite loop
+                            if(Math.abs(timestamp - new_pivot[1]) < 3600) {
+                                return resolve(new_pivot[0])
+                            }
+
+                            // Continue recursion with new pivot
+                            resolve(new_pivot)
+                        })
+                        return
+                    } else {
+                        return reject()
+                    }
+                }
+
+                let new_pivot = [data.result.block_header.height, data.result.block_header.timestamp]
+
+                // If we are within an hour that is good enough
+                // If for some reason there is a > 1h gap between blocks
+                // the recursion limit will take care of infinite loop
+                if(Math.abs(timestamp - new_pivot[1]) < 3600) {
+                    return resolve(new_pivot[0])
+                }
+
+                // Continue recursion with new pivot
+                resolve(new_pivot)
+
+            })
+        }).then((pivot_or_height) => {
+
+            return Array.isArray(pivot_or_height)
+                ? this.timestampToHeight(timestamp, pivot_or_height, recursion_limit + 1)
+                : pivot_or_height
+
+        }).catch(error => {
+            return false
+        })
+    }
+
     startHeartbeat() {
         clearInterval(this.heartbeat)
         this.heartbeat = setInterval(() => {

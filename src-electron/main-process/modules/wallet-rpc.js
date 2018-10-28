@@ -167,11 +167,13 @@ export class WalletRPC {
                 break
 
             case "restore_wallet":
-                this.restoreWallet(params.name, params.password, params.seed, params.refresh_start_height)
+                this.restoreWallet(params.name, params.password, params.seed,
+                                   params.refresh_type, params.refresh_type=="date" ? params.refresh_start_date : params.refresh_start_height)
                 break
 
             case "restore_view_wallet":
-                this.restoreViewWallet(params.name, params.password, params.address, params.viewkey, params.refresh_start_height)
+                this.restoreViewWallet(params.name, params.password, params.address, params.viewkey,
+                                       params.refresh_type, params.refresh_type=="date" ? params.refresh_start_date : params.refresh_start_height)
                 break
 
             case "import_wallet":
@@ -261,7 +263,19 @@ export class WalletRPC {
     }
 
 
-    restoreWallet(filename, password, seed, refresh_start_height=0) {
+    restoreWallet(filename, password, seed, refresh_type, refresh_start_timestamp_or_height) {
+
+        if(refresh_type == "date") {
+            this.backend.daemon.timestampToHeight(refresh_start_timestamp_or_height).then((height) => {
+                if(height === false)
+                    this.sendGateway("set_wallet_error", {status:{code: -1, message: "Invalid restore date"}})
+                else
+                    this.restoreWallet(filename, password, seed, "height", height)
+            })
+            return
+        }
+
+        let refresh_start_height = refresh_start_timestamp_or_height
 
         if(!Number.isInteger(refresh_start_height)) {
             refresh_start_height = 0
@@ -302,7 +316,19 @@ export class WalletRPC {
         });
     }
 
-    restoreViewWallet(filename, password, address, viewkey, refresh_start_height=0) {
+    restoreViewWallet(filename, password, address, viewkey, refresh_type, refresh_start_timestamp_or_height) {
+
+        if(refresh_type == "date") {
+            this.backend.daemon.timestampToHeight(refresh_start_timestamp_or_height).then((height) => {
+                if(height === false)
+                    this.sendGateway("set_wallet_error", {status:{code: -1, message: "Invalid restore date"}})
+                else
+                    this.restoreViewWallet(filename, password, address, viewkey, "height", height)
+            })
+            return
+        }
+
+        let refresh_start_height = refresh_start_timestamp_or_height
 
         if(!Number.isInteger(refresh_start_height)) {
             refresh_start_height = 0
@@ -723,7 +749,6 @@ export class WalletRPC {
                     wallet.secret[n.params.key_type] = n.result.key
                 }
 
-                console.log("send secrets")
                 this.sendGateway("set_wallet_data", wallet)
 
             })
@@ -1117,7 +1142,6 @@ export class WalletRPC {
             }
 
             this.sendRPC("change_wallet_password", {old_password, new_password}).then((data) => {
-                console.log(data)
                 if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
                     this.sendGateway("show_notification", {type: "negative", message: "Error changing password", timeout: 2000})
                     return
