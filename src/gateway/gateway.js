@@ -139,6 +139,15 @@ export class Gateway {
                 Notify.create(Object.assign(notification, decrypted_data.data))
                 break
 
+            case "return_to_wallet_select":
+                this.router.replace({ path: "/wallet-select" })
+                setTimeout(() => {
+                    // short delay to prevent wallet data reaching the
+                    // websocket moments after we close and reset data
+                    this.app.store.dispatch("gateway/resetWalletData")
+                }, 250);
+                break
+
         }
     }
 }

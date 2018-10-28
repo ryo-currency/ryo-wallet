@@ -49,6 +49,12 @@
                                 <q-item-tile label>Manage Key Images</q-item-tile>
                             </q-item-main>
                         </q-item>
+                        <q-item :disabled="!is_ready"
+                                v-close-overlay @click.native="deleteWallet()">
+                            <q-item-main>
+                                <q-item-tile label>Delete Wallet</q-item-tile>
+                            </q-item-main>
+                        </q-item>
                     </q-list>
                 </q-popover>
 
@@ -387,6 +393,43 @@ export default {
             }).catch(() => {
             })
 
+        },
+        deleteWallet () {
+            this.$q.dialog({
+                title: "Delete wallet",
+                message: "Are you absolutely sure you want to delete your wallet?\nMake sure you have your private keys backed up.\nTHIS PROCESS IS NOT REVERSIBLE!",
+                ok: {
+                    label: "DELETE",
+                    color: "red"
+                },
+                cancel: {
+                    flat: true,
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
+                }
+            }).then(() => {
+                this.$q.dialog({
+                    title: "Delete wallet",
+                    message: "Enter wallet password to continue.",
+                    prompt: {
+                        model: "",
+                        type: "password"
+                    },
+                    ok: {
+                        label: "DELETE",
+                        color: "red"
+                    },
+                    cancel: {
+                        flat: true,
+                        label: "CANCEL",
+                        color: this.theme=="dark"?"white":"dark"
+                    }
+                }).then(password => {
+                    this.$gateway.send("wallet", "delete_wallet", {password})
+                }).catch(() => {
+                })
+            }).catch(() => {
+            })
         }
     },
     components: {
