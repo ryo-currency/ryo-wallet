@@ -87,7 +87,8 @@ module.exports = function (ctx) {
                 "QCheckbox",
                 "QInnerLoading",
                 "QInfiniteScroll",
-                "QDatetime"
+                "QDatetime",
+                "QContextMenu"
             ],
             directives: [
                 "Ripple",

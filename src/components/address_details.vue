@@ -3,12 +3,12 @@
     <q-modal-layout>
         <q-toolbar slot="header" color="dark" inverted>
             <q-btn
-                 flat
-                 round
-                 dense
-                 @click="isVisible = false"
-                 icon="reply"
-                 />
+                flat
+                round
+                dense
+                @click="isVisible = false"
+                icon="reply"
+                />
             <q-toolbar-title>
                 Address details
             </q-toolbar-title>
@@ -99,8 +99,16 @@
     <template v-if="address != null">
         <q-modal v-model="isQRCodeVisible" minimized :content-css="{padding: '25px'}">
 
-            <div class="text-center q-mb-sm">
-                <qrcode-vue :value="address.address" size="240" />
+            <div class="text-center q-mb-sm q-pa-md" style="background: white;">
+                <qrcode-vue :value="address.address" size="240" ref="qr">
+                </qrcode-vue>
+                <q-context-menu>
+                    <q-list link separator style="min-width: 150px; max-height: 300px;">
+                        <q-item v-close-overlay @click.native="saveQR()">
+                            <q-item-main label="Save QR code to file" />
+                        </q-item>
+                    </q-list>
+                </q-context-menu>
             </div>
 
             <q-btn
@@ -133,6 +141,10 @@ export default {
         }
     },
     methods: {
+        saveQR() {
+            let img = this.$refs.qr.$el.childNodes[0].toDataURL()
+            this.$gateway.send("core", "save_png", {img, type: "QR Code"})
+        },
         copyAddress() {
             clipboard.writeText(this.address.address)
             this.$q.notify({

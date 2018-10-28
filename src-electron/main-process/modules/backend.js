@@ -1,6 +1,7 @@
 import { Daemon } from "./daemon";
 import { WalletRPC } from "./wallet-rpc";
 import { SCEE } from "./SCEE-Node";
+import { dialog } from "electron";
 
 const WebSocket = require("ws");
 const os = require("os");
@@ -8,7 +9,8 @@ const fs = require("fs");
 const path = require("path");
 
 export class Backend {
-    constructor() {
+    constructor(mainWindow) {
+        this.mainWindow = mainWindow
         this.daemon = null
         this.walletd = null
         this.wss = null
@@ -181,6 +183,24 @@ export class Backend {
 
             case "open_url":
                 require("electron").shell.openExternal(params.url)
+                break;
+
+            case "save_png":
+                let filename = dialog.showSaveDialog(this.mainWindow, {
+                    title: "Save "+params.type,
+                    filters: [{name: "PNG", extensions:["png"]}],
+                    defaultPath: os.homedir()
+                })
+                if(filename) {
+                    let base64Data = params.img.replace(/^data:image\/png;base64,/,"")
+                    let binaryData = new Buffer(base64Data, 'base64').toString("binary")
+                    fs.writeFile(filename, binaryData, "binary", (err) => {
+                        if(err)
+                            this.send("show_notification", {type: "negative", message: "Error saving "+params.type, timeout: 2000})
+                        else
+                            this.send("show_notification", {message: params.type+" saved to "+filename, timeout: 2000})
+                    })
+                }
                 break;
 
             default:

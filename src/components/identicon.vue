@@ -1,7 +1,18 @@
 <template>
-    <div class="identicon"
-         v-bind:style="{backgroundImage: 'url('+img+')', width: 8*size+'px', height: 8*size+'px'}">
-    </div>
+<div class="identicon"
+     v-bind:style="{backgroundImage: 'url('+img+')', width: 8*size+'px', height: 8*size+'px'}">
+
+    <q-context-menu>
+        <q-list link separator style="min-width: 150px; max-height: 300px;">
+            <q-item v-close-overlay
+                    :disabled="img == defaultImg"
+                    @click.native="saveIdenticon()">
+                <q-item-main label="Save identicon to file" />
+            </q-item>
+        </q-list>
+    </q-context-menu>
+
+</div>
 </template>
 
 <script>
@@ -27,7 +38,7 @@ export default {
         if(this.address && this.isAddressValid(this.address)) {
             this.createIcon({
                 seed: this.address,
-                scale: this.size
+                scale: 12
             })
         } else {
             this.img = this.defaultImg
@@ -46,6 +57,13 @@ export default {
         }
     },
     methods: {
+
+        saveIdenticon() {
+            if(this.img == this.defaultImg)
+                return
+            this.$gateway.send("core", "save_png", {img: this.img, type: "Identicon"})
+        },
+
         isAddressValid(input) {
 
             if(!(/^[0-9A-Za-z]+$/.test(input))) return false
