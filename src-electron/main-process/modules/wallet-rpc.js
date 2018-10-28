@@ -266,7 +266,12 @@ export class WalletRPC {
     restoreWallet(filename, password, seed, refresh_type, refresh_start_timestamp_or_height) {
 
         if(refresh_type == "date") {
-            this.backend.daemon.timestampToHeight(refresh_start_timestamp_or_height).then((height) => {
+            // Convert timestamp to 00:00 and move back a day
+            // Core code also moved back some amount of blocks
+            let timestamp = refresh_start_timestamp_or_height
+            timestamp = timestamp - (timestamp % 86400000) - 86400000
+
+            this.backend.daemon.timestampToHeight(timestamp).then((height) => {
                 if(height === false)
                     this.sendGateway("set_wallet_error", {status:{code: -1, message: "Invalid restore date"}})
                 else
@@ -319,7 +324,12 @@ export class WalletRPC {
     restoreViewWallet(filename, password, address, viewkey, refresh_type, refresh_start_timestamp_or_height) {
 
         if(refresh_type == "date") {
-            this.backend.daemon.timestampToHeight(refresh_start_timestamp_or_height).then((height) => {
+            // Convert timestamp to 00:00 and move back a day
+            // Core code also moved back some amount of blocks
+            let timestamp = refresh_start_timestamp_or_height
+            timestamp = timestamp - (timestamp % 86400000) - 86400000
+
+            this.backend.daemon.timestampToHeight(timestamp).then((height) => {
                 if(height === false)
                     this.sendGateway("set_wallet_error", {status:{code: -1, message: "Invalid restore date"}})
                 else

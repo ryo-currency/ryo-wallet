@@ -26,15 +26,15 @@
             <div class="row items-center gutter-sm">
                 <div class="col">
                     <template v-if="wallet.refresh_type=='date'">
-                        <q-datetime v-model="wallet.refresh_start_date" type="datetime"
-                                    float-label="Restore date"
+                        <q-datetime v-model="wallet.refresh_start_date" type="date"
+                                    float-label="Restore from date"
                                     modal :min="1492486495000" :max="Date.now()"
                                     :dark="theme=='dark'"
                                     />
                     </template>
                     <template v-else-if="wallet.refresh_type=='height'">
                         <q-input v-model="wallet.refresh_start_height" type="number"
-                                 min="0" float-label="Restore height"
+                                 min="0" float-label="Restore from block height"
                                  @blur="$v.wallet.refresh_start_height.$touch"
                                  :error="$v.wallet.refresh_start_height.$error"
                                  :dark="theme=='dark'"
@@ -45,7 +45,7 @@
                     <template v-if="wallet.refresh_type=='date'">
                         <q-btn @click="wallet.refresh_type='height'" class="float-right" :text-color="theme=='dark'?'white':'dark'" flat>
                             <div style="width: 80px;" class="text-center">
-                                <q-icon class="block" name="calendar_today" />
+                                <q-icon class="block" name="clear_all" />
                                 <div style="font-size:10px">Switch to<br/>height select</div>
                             </div>
                         </q-btn>
@@ -53,7 +53,7 @@
                     <template v-else-if="wallet.refresh_type=='height'">
                         <q-btn @click="wallet.refresh_type='date'" class="float-right" :text-color="theme=='dark'?'white':'dark'" flat>
                             <div style="width: 80px;" class="text-center">
-                                <q-icon class="block" name="calendar_today" />
+                                <q-icon class="block" name="today" />
                                 <div style="font-size:10px">Switch to<br/>date select</div>
                             </div>
                         </q-btn>
