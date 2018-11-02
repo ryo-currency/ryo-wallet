@@ -1,7 +1,7 @@
 <template>
 <q-item class="address-header">
     <q-item-side>
-        <Identicon :address="address" :size="12" />
+        <Identicon :address="address" :size="12" ref="identicon" />
     </q-item-side>
     <q-item-main class="self-start">
         <q-item-tile label>{{ title }}</q-item-tile>
@@ -21,6 +21,21 @@
         </q-btn>
 
     </q-item-side>
+
+    <q-context-menu>
+        <q-list link separator style="min-width: 150px; max-height: 300px;">
+            <q-item v-close-overlay
+                    @click.native="copyAddress(address, $event)">
+                <q-item-main label="Copy address" />
+            </q-item>
+
+            <q-item v-close-overlay
+                    @click.native="$refs.identicon.saveIdenticon()">
+                <q-item-main label="Save identicon to file" />
+            </q-item>
+        </q-list>
+    </q-context-menu>
+
 </q-item>
 </template>
 

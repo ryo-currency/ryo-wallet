@@ -86,12 +86,27 @@
                     <q-list-header class="q-px-none">Incoming transaction sent to:</q-list-header>
                     <q-item class="q-px-none">
                         <q-item-side>
-                            <Identicon :address="in_tx_address_used.address" />
+                            <Identicon :address="in_tx_address_used.address" ref="identicon" />
                         </q-item-side>
                         <q-item-main>
                             <q-item-tile label>{{ in_tx_address_used.address_index_text }}</q-item-tile>
                             <q-item-tile class="monospace ellipsis" sublabel>{{ in_tx_address_used.address }}</q-item-tile>
                         </q-item-main>
+
+                        <q-context-menu>
+                            <q-list link separator style="min-width: 150px; max-height: 300px;">
+                                <q-item v-close-overlay
+                                        @click.native="copyAddress(in_tx_address_used.address, $event)">
+                                    <q-item-main label="Copy address" />
+                                </q-item>
+
+                                <q-item v-close-overlay
+                                        @click.native="$refs.identicon.saveIdenticon()">
+                                    <q-item-main label="Save identicon to file" />
+                                </q-item>
+                            </q-list>
+                        </q-context-menu>
+
                     </q-item>
                 </q-list>
             </div>
@@ -102,13 +117,28 @@
                     <template v-if="out_destinations">
                         <q-item class="q-px-none" v-for="destination in out_destinations">
                             <q-item-side>
-                                <Identicon :address="destination.address" />
+                                <Identicon :address="destination.address" ref="identicon" />
                             </q-item-side>
                             <q-item-main>
                                 <q-item-tile label>{{ destination.name }}</q-item-tile>
                                 <q-item-tile class="monospace ellipsis" sublabel>{{ destination.address }}</q-item-tile>
                                 <q-item-tile sublabel><FormatRyo :amount="destination.amount" /></q-item-tile>
                             </q-item-main>
+
+                            <q-context-menu>
+                                <q-list link separator style="min-width: 150px; max-height: 300px;">
+                                    <q-item v-close-overlay
+                                            @click.native="copyAddress(destination.address, $event)">
+                                        <q-item-main label="Copy address" />
+                                    </q-item>
+
+                                    <q-item v-close-overlay
+                                            @click.native="$refs.identicon.saveIdenticon()">
+                                        <q-item-main label="Save identicon to file" />
+                                    </q-item>
+                                </q-list>
+                            </q-context-menu>
+
                         </q-item>
                     </template>
                     <template v-else>
@@ -146,6 +176,7 @@
 </template>
 
 <script>
+const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import { date } from "quasar"
 const { formatDate } = date
@@ -248,6 +279,21 @@ export default {
         formatDate (timestamp) {
             return date.formatDate(timestamp, "YYYY-MM-DD hh:mm a")
         },
+        copyAddress (address, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            clipboard.writeText(address)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Address copied to clipboard"
+            })
+        }
     },
     components: {
         Identicon,

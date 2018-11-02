@@ -4,14 +4,44 @@
     <q-list link no-border :dark="theme=='dark'">
         <template v-if="wallets.list.length">
             <q-list-header>Open wallet</q-list-header>
-            <q-item v-for="wallet in wallets.list" @click.native="openWallet(wallet)">
+            <q-item v-for="(wallet, index) in wallets.list" @click.native="openWallet(wallet)">
                 <q-item-side>
-                    <Identicon :address="wallet.address" />
+                    <Identicon :address="wallet.address" :ref="`${index}-identicon`" />
                 </q-item-side>
                 <q-item-main>
                     <q-item-tile label>{{ wallet.name }}</q-item-tile>
                     <q-item-tile class="monospace ellipsis" sublabel>{{ wallet.address }}</q-item-tile>
                 </q-item-main>
+                <q-item-side>
+                    <q-btn
+                        color="primary" style="width:25px;"
+                        size="sm" icon="file_copy"
+                        @click="copyAddress(wallet.address, $event)">
+                        <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                            Copy address
+                        </q-tooltip>
+                    </q-btn>
+                </q-item-side>
+
+                <q-context-menu>
+                    <q-list link separator style="min-width: 150px; max-height: 300px;">
+                        <q-item v-close-overlay
+                                @click.native="openWallet(wallet)">
+                            <q-item-main label="Open wallet" />
+                        </q-item>
+
+                        <q-item v-close-overlay
+                                @click.native="copyAddress(wallet.address, $event)">
+                            <q-item-main label="Copy address" />
+                        </q-item>
+
+                        <q-item v-close-overlay
+                                @click.native="$refs[`${index}-identicon`][0].saveIdenticon()">
+                            <q-item-main label="Save identicon to file" />
+                        </q-item>
+                    </q-list>
+                </q-context-menu>
+
             </q-item>
             <q-item-separator />
         </template>
@@ -38,6 +68,7 @@
 </template>
 
 <script>
+const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import Identicon from "components/identicon"
 export default {
@@ -93,8 +124,22 @@ export default {
         },
         importLegacyWallet() {
             this.$router.replace({ path: "wallet-select/import-legacy" });
+        },
+        copyAddress (address, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            clipboard.writeText(address)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Address copied to clipboard"
+            })
         }
-
     },
     watch: {
         status: {

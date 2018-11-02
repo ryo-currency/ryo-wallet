@@ -21,7 +21,7 @@
 
                 <q-item>
                     <q-item-side class="self-start">
-                        <Identicon :address="newEntry.address" />
+                        <Identicon :address="newEntry.address" menu />
                     </q-item-side>
                     <q-item-main>
                         <q-field>

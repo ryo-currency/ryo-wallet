@@ -26,6 +26,26 @@
                             </timeago>
                         </q-item-tile>
                     </q-item-side>
+
+                    <q-context-menu>
+                        <q-list link separator style="min-width: 150px; max-height: 300px;">
+                            <q-item v-close-overlay
+                                    @click.native="details(tx)">
+                                <q-item-main label="Show details" />
+                            </q-item>
+
+                            <q-item v-close-overlay
+                                    @click.native="copyTxid(tx.txid, $event)">
+                                <q-item-main label="Copy transaction id" />
+                            </q-item>
+
+                            <q-item v-close-overlay
+                                    @click.native="openExplorer(tx.txid)">
+                                <q-item-main label="View on explorer" />
+                            </q-item>
+                        </q-list>
+                    </q-context-menu>
+
                 </q-item>
                 <q-spinner-dots slot="message" :size="40"></q-spinner-dots>
             </q-list>
@@ -38,6 +58,7 @@
 </template>
 
 <script>
+const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import { QSpinnerDots } from "quasar"
 import Identicon from "components/identicon"
@@ -127,7 +148,25 @@ export default {
             if(this.limit !== -1 || this.tx_list.length < this.page * 24 + 24)
                 this.$refs.scroller.stop()
             done()
-        }
+        },
+        copyTxid (txid, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            clipboard.writeText(txid)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Txid copied to clipboard"
+            })
+        },
+        openExplorer (txid) {
+            this.$gateway.send("core", "open_explorer", {type: "tx", id: txid})
+        },
     },
     watch: {
         type: {

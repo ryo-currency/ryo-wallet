@@ -86,7 +86,9 @@
                         <span class="vertical-middle q-ml-xs">Recent incoming transactions to this address</span>
                     </div>
 
-                    <TxList type="in" :limit="5" :to-incoming-address-index="address.address_index" />
+                    <div style="margin: 0 -16px;">
+                        <TxList type="in" :limit="5" :to-incoming-address-index="address.address_index" />
+                    </div>
 
                 </div>
 

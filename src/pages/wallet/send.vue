@@ -53,7 +53,7 @@
 
             <q-item class="q-pa-none">
                 <q-item-side>
-                    <Identicon :address="newTx.address" />
+                    <Identicon :address="newTx.address" menu />
                 </q-item-side>
                 <q-item-main>
                     <q-field>
