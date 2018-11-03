@@ -83,6 +83,11 @@ export default {
             required: false,
             default: "all"
         },
+        txid: {
+            type: String,
+            required: false,
+            default: ""
+        },
         toOutgoingAddress: {
             type: String,
             required: false,
@@ -101,8 +106,15 @@ export default {
         tx_list (state) {
             let tx_list_filter = this.tx_list_all.filter((tx) => {
                 let valid = true
-                if(this.type !== "all" && this.type !== tx.type)
+                if(this.type !== "all" && this.type !== tx.type) {
                     valid = false
+                    return valid
+                }
+
+                if(this.txid !== "") {
+                    valid = tx.txid.toLowerCase().indexOf(this.txid.toLowerCase()) !== -1
+                    return valid
+                }
 
                 if(this.toOutgoingAddress !== "") {
                     if(tx.hasOwnProperty("destinations")) {
@@ -110,10 +122,12 @@ export default {
                     } else {
                         valid = false
                     }
+                    return valid
                 }
 
                 if(this.toIncomingAddressIndex !== -1) {
                     valid = tx.hasOwnProperty("subaddr_index") && tx.subaddr_index.minor == this.toIncomingAddressIndex
+                    return valid
                 }
 
                 return valid
@@ -170,6 +184,17 @@ export default {
     },
     watch: {
         type: {
+            handler(val, old){
+                if(val == old) return
+                if(this.$refs.scroller) {
+                    this.$refs.scroller.stop()
+                    this.page = 0
+                    this.$refs.scroller.reset()
+                    this.$refs.scroller.resume()
+                }
+            }
+        },
+        txid: {
             handler(val, old){
                 if(val == old) return
                 if(this.$refs.scroller) {
