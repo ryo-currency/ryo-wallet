@@ -224,6 +224,8 @@ export class Backend {
 
             // semi-shallow object merge
             Object.keys(disk_config_data).map(key => {
+                if(!this.config_data.hasOwnProperty(key))
+                    this.config_data[key] = {}
                 this.config_data[key] = Object.assign(this.config_data[key], disk_config_data[key])
             });
 
