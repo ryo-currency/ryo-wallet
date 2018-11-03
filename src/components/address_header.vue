@@ -76,7 +76,7 @@ export default {
                     ok: {
                         label: "OK"
                     },
-                }).then(password => {
+                }).then(() => {
                     this.$q.notify({
                         type: "positive",
                         timeout: 1000,
