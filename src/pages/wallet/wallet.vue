@@ -483,7 +483,13 @@ export default {
             let new_password = this.modals.change_password.new_password
             let new_password_confirm = this.modals.change_password.new_password_confirm
 
-            if(new_password != new_password_confirm) {
+            if(new_password == old_password) {
+                this.$q.notify({
+                    type: "negative",
+                    timeout: 1000,
+                    message: "New password must be different"
+                })
+            } else if(new_password != new_password_confirm) {
                 this.$q.notify({
                     type: "negative",
                     timeout: 1000,
