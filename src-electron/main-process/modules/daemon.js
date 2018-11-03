@@ -155,6 +155,9 @@ export class Daemon {
 
     banPeer(host, seconds=3600) {
 
+        if(!seconds)
+            seconds=3600
+
         let params = {
             bans: [{
                 host,
@@ -172,15 +175,8 @@ export class Daemon {
             let end_time = new Date(Date.now() + seconds * 1000).toLocaleString()
             this.sendGateway("show_notification", {message: "Banned "+host+" until "+end_time, timeout: 2000})
 
-            this.sendRPC("bans").then((data) => {
-                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
-                    return
-                }
-                let daemon_info = {
-                    bans: data.result.bans
-                }
-                this.sendGateway("set_daemon_data", daemon_info)
-            })
+            // Send updated peer and ban list
+            this.heartbeatSlowAction()
 
         })
 
