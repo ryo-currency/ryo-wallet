@@ -5,7 +5,7 @@
 
     <div class="row">
 
-        <div style="width: 290px">
+        <div class="infoBoxBalance">
             <div class="infoBox">
                 <div class="infoBoxContent">
                     <div class="text"><span>Balance</span></div>
@@ -98,7 +98,7 @@
             <template v-if="secret.view_key != secret.spend_key">
                 <h6 class="q-mb-xs">View key</h6>
                 <div class="row">
-                    <div class="col">
+                    <div class="col" style="word-break:break-all;">
                         {{ secret.view_key }}
                     </div>
                     <div class="col-auto">
@@ -117,7 +117,7 @@
             <template v-if="!/^0*$/.test(secret.spend_key)">
                 <h6 class="q-mb-xs">Spend key</h6>
                 <div class="row">
-                    <div class="col">
+                    <div class="col" style="word-break:break-all;">
                         {{ secret.spend_key }}
                     </div>
                     <div class="col-auto">
@@ -547,7 +547,12 @@ export default {
 </script>
 
 <style lang="scss">
-.layout-padding {
-    padding: 15px 16px !important;
+.infoBoxBalance {
+    width: 290px;
+}
+@media screen and (max-width: 750px) {
+    .infoBoxBalance {
+        width: 200px;
+    }
 }
 </style>

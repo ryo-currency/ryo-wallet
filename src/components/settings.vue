@@ -171,7 +171,4 @@ export default {
 </script>
 
 <style lang="scss">
-.modal-body.modal-message.modal-scroll {
-    white-space: pre;
-}
 </style>

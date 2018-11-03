@@ -42,7 +42,7 @@ function createWindow() {
 
     let mainWindowState = windowStateKeeper({
         defaultWidth: 800,
-        defaultHeight: 600
+        defaultHeight: 650
     })
 
     mainWindow = new BrowserWindow({
@@ -50,8 +50,8 @@ function createWindow() {
         y: mainWindowState.y,
         width: mainWindowState.width,
         height: mainWindowState.height,
-        minWidth: 800,
-        minHeight: 600,
+        minWidth: 640,
+        minHeight: 480,
         icon: require("path").join(__statics, "icon_512x512.png")
     })
 

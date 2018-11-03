@@ -42,7 +42,9 @@
             <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
-        <q-btn color="primary" @click="create" label="Create wallet" />
+        <q-field>
+            <q-btn color="primary" @click="create" label="Create wallet" />
+        </q-field>
 
     </div>
 </q-page>

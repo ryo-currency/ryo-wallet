@@ -25,7 +25,7 @@
     <template v-if="secret.view_key != secret.spend_key">
         <h6 class="q-mb-xs">View key</h6>
         <div class="row">
-            <div class="col">
+            <div class="col" style="word-break:break-all;">
                 {{ secret.view_key }}
             </div>
             <div class="q-item-side">
@@ -44,7 +44,7 @@
     <template v-if="!/^0*$/.test(secret.spend_key)">
         <h6 class="q-mb-xs">Spend key</h6>
         <div class="row">
-            <div class="col">
+            <div class="col" style="word-break:break-all;">
                 {{ secret.spend_key }}
             </div>
             <div class="q-item-side">
@@ -60,7 +60,9 @@
         </div>
     </template>
 
-    <q-btn class="q-mt-lg" color="primary" @click="open" label="Open wallet" />
+    <q-field>
+        <q-btn class="q-mt-lg" color="primary" @click="open" label="Open wallet" />
+    </q-field>
 
 </q-page>
 </template>
