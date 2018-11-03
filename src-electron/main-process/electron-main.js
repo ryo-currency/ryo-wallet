@@ -106,9 +106,9 @@ function createWindow() {
 
             portscanner.checkPortStatus(config.port, "127.0.0.1", (error, status) => {
                 if (status == "closed") {
-                    mainWindow.webContents.send("initialize", config)
                     backend = new Backend(mainWindow)
                     backend.init(config)
+                    mainWindow.webContents.send("initialize", config)
                 } else {
                     dialog.showMessageBox(mainWindow, {
                         title: "Startup error",

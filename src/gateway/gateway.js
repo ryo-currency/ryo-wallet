@@ -34,9 +34,11 @@ export class Gateway {
 
         ipcRenderer.on("initialize", (event, data) => {
             this.token = data.token
-            this.ws = new WebSocket("ws://127.0.0.1:"+data.port);
-            this.ws.on("open", () => {this.open()});
-            this.ws.on("message", (message) => {this.receive(message)});
+            setTimeout(() => {
+                this.ws = new WebSocket("ws://127.0.0.1:"+data.port);
+                this.ws.on("open", () => {this.open()});
+                this.ws.on("message", (message) => {this.receive(message)});
+            }, 1000);
         });
 
         ipcRenderer.on("confirmClose", () => {
