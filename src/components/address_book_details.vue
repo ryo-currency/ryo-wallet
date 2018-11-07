@@ -11,25 +11,24 @@
                 Edit address book entry
             </q-toolbar-title>
 
-
             <q-btn v-if="mode=='edit'" flat no-ripple @click="cancelEdit()" label="Cancel" />
             <q-btn class="q-ml-sm" color="primary" @click="save()" label="Save" />
-
 
         </q-toolbar>
         <div>
 
-            <q-list no-border>
+            <q-list no-border :dark="theme=='dark'">
 
                 <q-item>
                     <q-item-side class="self-start">
-                        <Identicon :address="newEntry.address" />
+                        <Identicon :address="newEntry.address" menu />
                     </q-item-side>
                     <q-item-main>
                         <q-field>
                             <q-input v-model="newEntry.address" float-label="Address"
                                      @blur="$v.newEntry.address.$touch"
                                      :error="$v.newEntry.address.$error"
+                                     :dark="theme=='dark'"
                                      />
                         </q-field>
                     </q-item-main>
@@ -38,16 +37,16 @@
                 <q-item>
                     <q-item-main>
                         <q-field>
-                            <q-input v-model="newEntry.name" float-label="Name" />
+                            <q-input v-model="newEntry.name" float-label="Name" :dark="theme=='dark'" />
                         </q-field>
                     </q-item-main>
                     <q-item-side class="self-start q-pa-sm">
                         <q-checkbox
-                             v-model="newEntry.starred"
-                             checked-icon="star"
-                             unchecked-icon="star_border"
-                             class="star-entry"
-                             />
+                            v-model="newEntry.starred"
+                            checked-icon="star"
+                            unchecked-icon="star_border"
+                            class="star-entry"
+                            />
                     </q-item-side>
                 </q-item>
 
@@ -57,6 +56,7 @@
                             <q-input v-model="newEntry.payment_id" float-label="Payment ID (optional)"
                                      @blur="$v.newEntry.payment_id.$touch"
                                      :error="$v.newEntry.payment_id.$error"
+                                     :dark="theme=='dark'"
                                      />
                         </q-field>
                     </q-item-main>
@@ -65,7 +65,7 @@
                 <q-item>
                     <q-item-main>
                         <q-field>
-                            <q-input v-model="newEntry.description" type="textarea" float-label="Notes (optional)" />
+                            <q-input v-model="newEntry.description" type="textarea" float-label="Notes (optional)" :dark="theme=='dark'" />
                         </q-field>
                     </q-item-main>
                 </q-item>
@@ -91,20 +91,23 @@
                 Address book details
             </q-toolbar-title>
             <q-btn class="q-mr-sm"
-                 flat no-ripple
-                 :disable="!is_ready"
-                 @click="edit()" label="Edit" />
-            <q-btn color="primary" @click="copyAddress" label="Copy address" />
+                   flat no-ripple
+                   :disable="!is_ready"
+                   @click="edit()" label="Edit" />
+            <q-btn
+                color="primary"
+                :disabled="view_only"
+                @click="sendToAddress"
+                label="Send coins" />
         </q-toolbar>
         <div class="layout-padding">
 
             <template v-if="entry != null">
 
                 <AddressHeader :address="entry.address"
-                               :header="entry.name"
-                               :subheader="entry.address"
-                               :extra="/^0*$/.test(entry.payment_id) ? '' : 'Payment id: '+entry.payment_id"
-                               :extra2="entry.description ? 'Notes: '+entry.description : ''"
+                               :title="entry.name"
+                               :payment_id="entry.payment_id"
+                               :extra="entry.description ? 'Notes: '+entry.description : ''"
                                />
 
 
@@ -113,7 +116,7 @@
 
                     <div class="non-selectable">
                         <q-icon name="history" size="24px" />
-                        <span class="vertical-middle q-ml-xs">Recent outgoing transactions to this address</span>
+                        <span class="vertical-middle q-ml-xs">Recent transactions with this address</span>
                     </div>
 
                     <TxList type="in" :limit="5" :to-outgoing-address="entry.address" />
@@ -131,7 +134,6 @@
 
 <script>
 import { mapState } from "vuex"
-const { clipboard } = require("electron")
 import Identicon from "components/identicon"
 import AddressHeader from "components/address_header"
 import TxList from "components/tx_list"
@@ -155,6 +157,8 @@ export default {
         }
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
+        view_only: state => state.gateway.wallet.info.view_only,
         is_ready (state) {
             return this.$store.getters["gateway/isReady"]
         }
@@ -195,15 +199,8 @@ export default {
             this.close()
         },
         sendToAddress () {
-
-        },
-        copyAddress () {
-            clipboard.writeText(this.entry.address)
-            this.$q.notify({
-                type: "positive",
-                timeout: 1000,
-                message: "Address copied to clipboard"
-            })
+            this.close()
+            this.$router.replace({ path: "send", query: {address: this.entry.address, payment_id: this.entry.payment_id} });
         },
         edit () {
             this.mode = "edit"

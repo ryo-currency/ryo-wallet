@@ -4,6 +4,9 @@ export default {
             code: 1 // Connecting to backend
         },
         config: {
+            appearance: {
+                theme: "light"
+            }
         },
         pending_config: {
         }
@@ -23,6 +26,7 @@ export default {
             height: 0,
             balance: 0,
             unlocked_balance: 0,
+            view_only: false
         },
         secret: {
             mnemonic: "",

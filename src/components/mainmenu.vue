@@ -33,7 +33,7 @@
 
             <img class="q-mb-md" src="statics/ryo-wallet.svg" height="42" />
 
-            <p class="q-my-sm">Version: ATOM v1.0.2-0.3.1.2</p>
+            <p class="q-my-sm">Version: ATOM v{{version}}-v{{daemonVersion}}</p>
             <p class="q-my-sm">Copyright (c) 2018, Ryo Currency Project</p>
             <p class="q-my-sm">All rights reserved.</p>
 
@@ -49,18 +49,19 @@
             </div>
 
             <q-btn
-                 color="primary"
-                 @click="showAbout(false)"
-                 label="Close"
-             />
+                color="primary"
+                @click="showAbout(false)"
+                label="Close"
+                />
         </div>
     </q-modal>
 </div>
 </template>
 
 <script>
+import { version, daemonVersion } from "../../package.json"
+import { mapState } from "vuex"
 import SettingsModal from "components/settings"
-
 export default {
     name: "MainMenu",
     props: {
@@ -70,8 +71,19 @@ export default {
             default: false
         }
     },
-    computed: {
+    data() {
+        return {
+            version: "",
+            daemonVersion: ""
+        }
     },
+    mounted () {
+        this.version = version
+        this.daemonVersion = daemonVersion
+    },
+    computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
+    }),
     methods: {
         openExternal (url) {
             this.$gateway.send("core", "open_url", {url})
@@ -94,7 +106,8 @@ export default {
                 },
                 cancel: {
                     flat: true,
-                    label: "CANCEL"
+                    label: "CANCEL",
+                    color: this.theme=="dark"?"white":"dark"
                 }
             }).then(() => {
                 this.$router.replace({ path: "/wallet-select" })
@@ -105,7 +118,7 @@ export default {
                     this.$store.dispatch("gateway/resetWalletData")
                 }, 250);
             }).catch(() => {
-            });
+            })
         },
         exit () {
             this.$gateway.confirmClose("Are you sure you want to exit?")
@@ -126,7 +139,7 @@ export default {
 
         a {
 
-            color: #027be3;
+            color: #497dc6;
             text-decoration: none;
 
             &:hover,

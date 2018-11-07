@@ -1,7 +1,7 @@
 <template>
 <q-page>
 
-    <q-stepper class="no-shadow" ref="stepper">
+    <q-stepper class="no-shadow" ref="stepper" :color="theme == 'dark' ? 'light' : 'dark'" dark>
 
         <q-step default title="Welcome">
 
@@ -24,18 +24,31 @@
                 </g>
             </svg>
 
-            <div>Version: ATOM v1.0.2-0.3.1.2</div>
+            <div>Version: ATOM v{{version}}-v{{daemonVersion}}</div>
+
+            <h6 class="q-mb-md" style="font-weight: 300">Select Appearance:</h6>
+
+            <q-btn-toggle
+                v-model="choose_theme"
+                toggle-color="primary"
+                size="md"
+                :options="[
+                          {label: 'Light theme', value: 'light', icon: 'brightness_5'},
+                          {label: 'Dark theme', value: 'dark', icon: 'brightness_2'},
+                          ]"
+                />
+
 
             <h6 class="q-mb-md" style="font-weight: 300">Select language:</h6>
 
-            <div class="row">
-
-                <q-btn flat class="language-item">
-                    <div class="language-item-circle">EN</div> English
-
-                </q-btn>
-
-            </div>
+            <q-btn-toggle
+                v-model="choose_lang"
+                toggle-color="primary"
+                size="md"
+                :options="[
+                          {label: 'English', value: 'EN', icon: 'language'},
+                          ]"
+                />
 
             <p class="q-mt-md">More languages coming soon</p>
 
@@ -80,18 +93,18 @@
         <div class="row justify-end">
             <div>
 	        <q-btn
-	             flat
-	             @click="clickPrev()"
-	             label="Back"
-	             />
+	            flat
+	            @click="clickPrev()"
+	            label="Back"
+	            />
             </div>
             <div>
 	        <q-btn
-                     class="q-ml-sm"
-                     color="primary"
-	             @click="clickNext()"
-	             label="Next"
-	             />
+                    class="q-ml-sm"
+                    color="primary"
+	            @click="clickNext()"
+	            label="Next"
+	            />
             </div>
         </div>
 
@@ -101,13 +114,38 @@
 </template>
 
 <script>
+import { version, daemonVersion } from "../../../package.json"
 import { mapState } from "vuex"
 import SettingsGeneral from "components/settings_general"
 export default {
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         pending_config: state => state.gateway.app.pending_config
     }),
+    data() {
+        return {
+            choose_theme: "light",
+            choose_lang: "EN",
+            version: "",
+            daemonVersion: ""
+        }
+    },
+    watch: {
+        choose_theme: function (val) {
+            this.$store.commit("gateway/set_app_data", {
+                config: {
+                    appearance: {
+                        theme: val
+                    }
+                }
+            });
+        }
+    },
     mounted () {
+
+        this.version = version
+        this.daemonVersion = daemonVersion
+
         // set add status back to 2
         this.$store.commit("gateway/set_app_data", {
             status: {
@@ -165,9 +203,4 @@ export default {
     }
 
 }
-
-footer {
-    background:white;
-}
-
 </style>

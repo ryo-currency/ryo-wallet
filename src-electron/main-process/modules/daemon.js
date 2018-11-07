@@ -7,6 +7,7 @@ export class Daemon {
     constructor(backend) {
         this.backend = backend
         this.heartbeat = null
+        this.heartbeat_slow = null
         this.id = 0
         this.testnet = false
         this.local = false // do we have a local daemon ?
@@ -136,27 +137,152 @@ export class Daemon {
         })
     }
 
+    handle(data) {
+
+        let params = data.data
+
+        switch (data.method) {
+
+            case "ban_peer":
+                this.banPeer(params.host, params.seconds)
+                break
+
+            default:
+
+        }
+
+    }
+
+    banPeer(host, seconds=3600) {
+
+        if(!seconds)
+            seconds=3600
+
+        let params = {
+            bans: [{
+                host,
+                seconds,
+                ban: true
+            }]
+        }
+
+        this.sendRPC("set_bans", params).then((data) => {
+            if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                this.sendGateway("show_notification", {type: "negative", message: "Error banning peer", timeout: 2000})
+                return
+            }
+
+            let end_time = new Date(Date.now() + seconds * 1000).toLocaleString()
+            this.sendGateway("show_notification", {message: "Banned "+host+" until "+end_time, timeout: 2000})
+
+            // Send updated peer and ban list
+            this.heartbeatSlowAction()
+
+        })
+
+    }
+
+    timestampToHeight(timestamp, pivot=null, recursion_limit=null) {
+
+        return new Promise((resolve, reject) => {
+
+            if(timestamp > 999999999999) {
+                // We have got a JS ms timestamp, convert
+                timestamp = Math.floor(timestamp / 1000)
+            }
+
+            pivot = pivot || [137500, 1528073506]
+            recursion_limit = recursion_limit || 0;
+
+            let diff = Math.floor((timestamp - pivot[1]) / 240)
+            let estimated_height = pivot[0] + diff
+
+            if(estimated_height <= 0) {
+                return resolve(0)
+            }
+
+            if(recursion_limit > 10) {
+                return resolve(pivot[0])
+            }
+
+            this.getRPC("block_header_by_height", {height: estimated_height}).then((data) => {
+
+                if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                    if(data.error.code == -2) { // Too big height
+
+                        this.getRPC("last_block_header").then((data) => {
+                            if(data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+                                return reject()
+                            }
+
+                            let new_pivot = [data.result.block_header.height, data.result.block_header.timestamp]
+
+                            // If we are within an hour that is good enough
+                            // If for some reason there is a > 1h gap between blocks
+                            // the recursion limit will take care of infinite loop
+                            if(Math.abs(timestamp - new_pivot[1]) < 3600) {
+                                return resolve(new_pivot[0])
+                            }
+
+                            // Continue recursion with new pivot
+                            resolve(new_pivot)
+                        })
+                        return
+                    } else {
+                        return reject()
+                    }
+                }
+
+                let new_pivot = [data.result.block_header.height, data.result.block_header.timestamp]
+
+                // If we are within an hour that is good enough
+                // If for some reason there is a > 1h gap between blocks
+                // the recursion limit will take care of infinite loop
+                if(Math.abs(timestamp - new_pivot[1]) < 3600) {
+                    return resolve(new_pivot[0])
+                }
+
+                // Continue recursion with new pivot
+                resolve(new_pivot)
+
+            })
+        }).then((pivot_or_height) => {
+
+            return Array.isArray(pivot_or_height)
+                ? this.timestampToHeight(timestamp, pivot_or_height, recursion_limit + 1)
+                : pivot_or_height
+
+        }).catch(error => {
+            return false
+        })
+    }
+
     startHeartbeat() {
-        clearInterval(this.heartbeat);
+        clearInterval(this.heartbeat)
         this.heartbeat = setInterval(() => {
             this.heartbeatAction()
-        }, this.local ? 2.5 * 1000 : 30 * 1000) // 2.5 seconds for local daemon, 30 seconds for remote
+        }, this.local ? 5 * 1000 : 30 * 1000) // 5 seconds for local daemon, 30 seconds for remote
         this.heartbeatAction()
+
+        clearInterval(this.heartbeat_slow)
+        this.heartbeat_slow = setInterval(() => {
+            this.heartbeatSlowAction()
+        }, 30 * 1000) // 30 seconds
+        this.heartbeatSlowAction()
+
     }
 
     heartbeatAction() {
         let actions = []
+
+        // No difference between local and remote heartbeat action for now
         if(this.local) {
             actions = [
-                this.getRPC("info"),
-                this.getRPC("connections"),
-                this.getRPC("bans"),
-                this.getRPC("txpool_backlog"),
+                this.getRPC("info")
             ]
         } else {
             actions = [
-                this.getRPC("info"),
-                this.getRPC("txpool_backlog"),
+                this.getRPC("info")
             ]
         }
 
@@ -168,7 +294,35 @@ export class Daemon {
                     continue
                 if(n.method == "get_info") {
                     daemon_info.info = n.result
-                } else if (n.method == "get_connections" && n.result.hasOwnProperty("connections")) {
+                }
+            }
+            this.sendGateway("set_daemon_data", daemon_info)
+        })
+    }
+
+    heartbeatSlowAction() {
+        let actions = []
+        if(this.local) {
+            actions = [
+                this.getRPC("connections"),
+                this.getRPC("bans"),
+                //this.getRPC("txpool_backlog"),
+            ]
+        } else {
+            actions = [
+                //this.getRPC("txpool_backlog"),
+            ]
+        }
+
+        if(actions.length === 0) return
+
+        Promise.all(actions).then((data) => {
+            let daemon_info = {
+            }
+            for (let n of data) {
+                if(n == undefined || !n.hasOwnProperty("result") || n.result == undefined)
+                    continue
+                if (n.method == "get_connections" && n.result.hasOwnProperty("connections")) {
                     daemon_info.connections = n.result.connections
                 } else if (n.method == "get_bans" && n.result.hasOwnProperty("bans")) {
                     daemon_info.bans = n.result.bans
@@ -176,8 +330,12 @@ export class Daemon {
                     daemon_info.tx_pool_backlog = n.result.backlog
                 }
             }
-            this.backend.send("set_daemon_data", daemon_info)
+            this.sendGateway("set_daemon_data", daemon_info)
         })
+    }
+
+    sendGateway(method, data) {
+        this.backend.send(method, data)
     }
 
     sendRPC(method, params={}) {

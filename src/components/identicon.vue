@@ -1,7 +1,18 @@
 <template>
-    <div class="identicon"
-         v-bind:style="{backgroundImage: 'url('+img+')', width: 8*size+'px', height: 8*size+'px'}">
-    </div>
+<div class="identicon"
+     v-bind:style="{backgroundImage: 'url('+img+')', width: 8*size+'px', height: 8*size+'px'}">
+
+    <q-context-menu v-if="menu">
+        <q-list link separator style="min-width: 150px; max-height: 300px;">
+            <q-item v-close-overlay
+                    :disabled="img == defaultImg"
+                    @click.native="saveIdenticon()">
+                <q-item-main label="Save identicon to file" />
+            </q-item>
+        </q-list>
+    </q-context-menu>
+
+</div>
 </template>
 
 <script>
@@ -14,6 +25,10 @@ export default {
         size: {
             type: Number,
             default: 5
+        },
+        menu: {
+            type: Boolean,
+            default: false
         }
     },
     data () {
@@ -23,11 +38,16 @@ export default {
             defaultImg: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gkHECkpHU3uFgAAAZlJREFUWMPt2D1PwkAYB/D/AxWIbZUCAvGNwZiAcTG+JQ4sJn4AV7+UfgNXjY6ObrppXBiEGBMUgimKKHDy2jpUUHGTIhe5Z7rc8OTX9p67e0oXu3cmOA4HOA8BFEABFMBhB0q9JnBrEgIxGeqsGx7fCBwSoVExUMpUoV+VwPTG4ICRLQ2BmPJj3qU44Y/K8EdlpE8LeExUBgPU5kZhGiaYXkfmrIhytg6SgMn1cYSWVRARIps+ML3+6zfZE5Dl60gd5b/NmU0ge/6CQpJhYScMAPBFZTC9+PdF0o37GtViE6ZhXZQ8Xom/KiYCQNa4+WbwB5yOe0FkCQspxhcwtKJiYtGq7ucbhtd0dXD7YHeEV1VMbXgBAOVcDbcnT/ycJMElpYOrPNSQPNR5OupMzMS1zvZzfaDbktU2YHht7HP7OdZte2zbgHLI3Rm3aiZ/QHJ+fGjD3i7WNqDTZaUiB/F13WqHHRXbV6BHk0BOAhHA8g3+gPPbQbgUayFe7t3ztwbNVn9+8fz/nqQdif2caDsFUAAFUACHEfgOXvt3FLbL3AsAAAAASUVORK5CYII="
         }
     },
+    computed: {
+        isDefault: function () {
+            return this.img == this.defaultImg
+        }
+    },
     created() {
         if(this.address && this.isAddressValid(this.address)) {
             this.createIcon({
                 seed: this.address,
-                scale: this.size
+                scale: 12
             })
         } else {
             this.img = this.defaultImg
@@ -46,6 +66,13 @@ export default {
         }
     },
     methods: {
+
+        saveIdenticon() {
+            if(this.img == this.defaultImg)
+                return
+            this.$gateway.send("core", "save_png", {img: this.img, type: "Identicon"})
+        },
+
         isAddressValid(input) {
 
             if(!(/^[0-9A-Za-z]+$/.test(input))) return false
@@ -195,8 +222,4 @@ export default {
 </script>
 
 <style>
-    .identicon {
-    box-shadow: inset rgba(255, 255, 255, 0.6) 0 2px 2px, inset rgba(0, 0, 0, 0.3) 0 -2px 6px;
-    border-radius: 2px;
-    }
 </style>

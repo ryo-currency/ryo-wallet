@@ -9,7 +9,6 @@ export default {
     name: "FormatRyo",
     props: {
         amount: {
-            type: Number,
             required: true
         },
         round: {

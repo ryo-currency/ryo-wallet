@@ -2,6 +2,7 @@ import { app, ipcMain, BrowserWindow, Menu, dialog } from "electron"
 import { Backend } from "./modules/backend"
 import menuTemplate from "./menu"
 const portscanner = require("portscanner")
+const windowStateKeeper = require("electron-window-state")
 
 /**
  * Set `__statics` path to static files in production;
@@ -38,13 +39,20 @@ function createWindow() {
     /**
      * Initial window options
      */
+
+    let mainWindowState = windowStateKeeper({
+        defaultWidth: 800,
+        defaultHeight: 650
+    })
+
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        minWidth: 800,
-        minHeight: 600,
-        icon: require("path").join(__statics, "icon_512x512.png"),
-        useContentSize: true
+        x: mainWindowState.x,
+        y: mainWindowState.y,
+        width: mainWindowState.width,
+        height: mainWindowState.height,
+        minWidth: 640,
+        minHeight: 480,
+        icon: require("path").join(__statics, "icon_512x512.png")
     })
 
     mainWindow.on("close", (e) => {
@@ -98,9 +106,9 @@ function createWindow() {
 
             portscanner.checkPortStatus(config.port, "127.0.0.1", (error, status) => {
                 if (status == "closed") {
-                    mainWindow.webContents.send("initialize", config)
-                    backend = new Backend()
+                    backend = new Backend(mainWindow)
                     backend.init(config)
+                    mainWindow.webContents.send("initialize", config)
                 } else {
                     dialog.showMessageBox(mainWindow, {
                         title: "Startup error",
@@ -121,7 +129,7 @@ function createWindow() {
     })
 
     mainWindow.loadURL(process.env.APP_URL)
-
+    mainWindowState.manage(mainWindow)
 }
 
 app.on("ready", () => {

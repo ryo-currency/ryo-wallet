@@ -13,11 +13,20 @@
 
         <q-field>
             <q-input
-                v-model="wallet.seed"
-                float-label="Mnemonic seed"
-                type="textarea"
-                @blur="$v.wallet.seed.$touch"
-                :error="$v.wallet.seed.$error"
+                v-model="wallet.address"
+                float-label="Wallet address"
+                @blur="$v.wallet.address.$touch"
+                :error="$v.wallet.address.$error"
+                :dark="theme=='dark'"
+                />
+        </q-field>
+
+        <q-field>
+            <q-input
+                v-model="wallet.viewkey"
+                float-label="Private viewkey"
+                @blur="$v.wallet.viewkey.$touch"
+                :error="$v.wallet.viewkey.$error"
                 :dark="theme=='dark'"
                 />
         </q-field>
@@ -71,7 +80,7 @@
         </q-field>
 
         <q-field>
-            <q-btn color="primary" @click="restore_wallet" label="Restore wallet" />
+            <q-btn color="primary" @click="restore_view_wallet" label="Restore view-only wallet" />
         </q-field>
 
     </div>
@@ -80,13 +89,15 @@
 
 <script>
 import { required, numeric } from "vuelidate/lib/validators"
+import { privkey, address } from "src/validators/common"
 import { mapState } from "vuex"
 export default {
     data () {
         return {
             wallet: {
                 name: "",
-                seed: "",
+                address: "",
+                viewkey: "",
                 refresh_type: "date",
                 refresh_start_height: 0,
                 refresh_start_date: 1492486495000, // timestamp of block 1
@@ -126,12 +137,13 @@ export default {
     validations: {
         wallet: {
             name: { required },
-            seed: { required },
+            address: { required, address },
+            viewkey: { required, privkey },
             refresh_start_height: { numeric }
         }
     },
     methods: {
-        restore_wallet() {
+        restore_view_wallet() {
             this.$v.wallet.$touch()
 
             if (this.$v.wallet.name.$error) {
@@ -142,21 +154,20 @@ export default {
                 })
                 return
             }
-            if (this.$v.wallet.seed.$error) {
+            if (this.$v.wallet.address.$error) {
                 this.$q.notify({
                     type: "negative",
                     timeout: 1000,
-                    message: "Enter seed words"
+                    message: "Invalid public address"
                 })
                 return
             }
 
-            let seed = this.wallet.seed.trim().replace(/\s{2,}/g, " ").split(" ")
-            if(seed.length !== 14 && seed.length !== 24 && seed.length !== 25 && seed.length !== 26) {
+            if (this.$v.wallet.viewkey.$error) {
                 this.$q.notify({
                     type: "negative",
                     timeout: 1000,
-                    message: "Invalid seed word length"
+                    message: "Invalid private viewkey"
                 })
                 return
             }
@@ -182,7 +193,7 @@ export default {
                 delay: 0
             })
 
-            this.$gateway.send("wallet", "restore_wallet", this.wallet);
+            this.$gateway.send("wallet", "restore_view_wallet", this.wallet);
         },
         cancel() {
             this.$router.replace({ path: "/wallet-select" });

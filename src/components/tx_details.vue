@@ -3,12 +3,12 @@
     <q-modal-layout>
         <q-toolbar slot="header" color="dark" inverted>
             <q-btn
-                 flat
-                 round
-                 dense
-                 @click="isVisible = false"
-                 icon="reply"
-                 />
+                flat
+                round
+                dense
+                @click="isVisible = false"
+                icon="reply"
+                />
             <q-toolbar-title>
                 Transaction details
             </q-toolbar-title>
@@ -78,7 +78,7 @@
             <p class="monospace break-all">{{ tx.txid }}</p>
 
             <h6 class="q-mt-xs q-mb-none text-weight-light">Payment id</h6>
-            <p class="monospace break-all">{{ tx.payment_id }}</p>
+            <p class="monospace break-all">{{ tx.payment_id ? tx.payment_id : 'N/A' }}</p>
 
 
             <div v-if="tx.type=='in' || tx.type=='pool'">
@@ -86,12 +86,27 @@
                     <q-list-header class="q-px-none">Incoming transaction sent to:</q-list-header>
                     <q-item class="q-px-none">
                         <q-item-side>
-                            <Identicon :address="in_tx_address_used.address" />
+                            <Identicon :address="in_tx_address_used.address" ref="identicon" />
                         </q-item-side>
                         <q-item-main>
                             <q-item-tile label>{{ in_tx_address_used.address_index_text }}</q-item-tile>
                             <q-item-tile class="monospace ellipsis" sublabel>{{ in_tx_address_used.address }}</q-item-tile>
                         </q-item-main>
+
+                        <q-context-menu>
+                            <q-list link separator style="min-width: 150px; max-height: 300px;">
+                                <q-item v-close-overlay
+                                        @click.native="copyAddress(in_tx_address_used.address, $event)">
+                                    <q-item-main label="Copy address" />
+                                </q-item>
+
+                                <q-item v-close-overlay
+                                        @click.native="$refs.identicon.saveIdenticon()">
+                                    <q-item-main label="Save identicon to file" />
+                                </q-item>
+                            </q-list>
+                        </q-context-menu>
+
                     </q-item>
                 </q-list>
             </div>
@@ -102,13 +117,28 @@
                     <template v-if="out_destinations">
                         <q-item class="q-px-none" v-for="destination in out_destinations">
                             <q-item-side>
-                                <Identicon :address="destination.address" />
+                                <Identicon :address="destination.address" ref="identicon" />
                             </q-item-side>
                             <q-item-main>
                                 <q-item-tile label>{{ destination.name }}</q-item-tile>
                                 <q-item-tile class="monospace ellipsis" sublabel>{{ destination.address }}</q-item-tile>
                                 <q-item-tile sublabel><FormatRyo :amount="destination.amount" /></q-item-tile>
                             </q-item-main>
+
+                            <q-context-menu>
+                                <q-list link separator style="min-width: 150px; max-height: 300px;">
+                                    <q-item v-close-overlay
+                                            @click.native="copyAddress(destination.address, $event)">
+                                        <q-item-main label="Copy address" />
+                                    </q-item>
+
+                                    <q-item v-close-overlay
+                                            @click.native="$refs.identicon.saveIdenticon()">
+                                        <q-item-main label="Save identicon to file" />
+                                    </q-item>
+                                </q-list>
+                            </q-context-menu>
+
                         </q-item>
                     </template>
                     <template v-else>
@@ -126,14 +156,16 @@
 
             <q-field class="q-mt-md">
                 <q-input
-                     v-model="txNotes" float-label="Transaction notes"
-                     type="textarea" rows="2" />
+                    v-model="txNotes" float-label="Transaction notes"
+                    :dark="theme=='dark'"
+                    type="textarea" rows="2" />
             </q-field>
 
             <q-field class="q-mt-sm">
                 <q-btn
-                     :disable="!is_ready"
-                     @click="saveTxNotes" label="Save tx notes" />
+                    :disable="!is_ready"
+                    :text-color="theme=='dark'?'white':'dark'"
+                    @click="saveTxNotes" label="Save tx notes" />
             </q-field>
 
         </div>
@@ -144,6 +176,7 @@
 </template>
 
 <script>
+const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import { date } from "quasar"
 const { formatDate } = date
@@ -153,6 +186,7 @@ import FormatRyo from "components/format_ryo"
 export default {
     name: "TxDetails",
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         in_tx_address_used (state) {
             let i
             let used_addresses = state.gateway.wallet.address_list.primary.concat(state.gateway.wallet.address_list.used)
@@ -208,7 +242,7 @@ export default {
                 fee: 0,
                 height: 0,
                 note: "",
-                payment_id: "0000000000000000",
+                payment_id: "",
                 subaddr_index: {major: 0, minor: 0},
                 timestamp: 0,
                 txid: "",
@@ -245,6 +279,21 @@ export default {
         formatDate (timestamp) {
             return date.formatDate(timestamp, "YYYY-MM-DD hh:mm a")
         },
+        copyAddress (address, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            clipboard.writeText(address)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Address copied to clipboard"
+            })
+        }
     },
     components: {
         Identicon,

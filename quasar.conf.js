@@ -60,6 +60,7 @@ module.exports = function (ctx) {
                 "QInput",
                 "QRadio",
                 "QBtn",
+                "QBtnToggle",
                 "QIcon",
                 "QTabs",
                 "QTab",
@@ -85,7 +86,9 @@ module.exports = function (ctx) {
                 "QCollapsible",
                 "QCheckbox",
                 "QInnerLoading",
-                "QInfiniteScroll"
+                "QInfiniteScroll",
+                "QDatetime",
+                "QContextMenu"
             ],
             directives: [
                 "Ripple",
@@ -95,6 +98,7 @@ module.exports = function (ctx) {
             plugins: [
                 "Notify",
                 "Loading",
+                "LocalStorage",
                 "Dialog"
             ]
             // iconSet: ctx.theme.mat ? "material-icons" : "ionicons"

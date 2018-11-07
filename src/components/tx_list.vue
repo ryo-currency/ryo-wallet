@@ -2,13 +2,12 @@
 <div>
 
     <template v-if="tx_list.length === 0">
-
         <p class="q-pa-md q-mb-none">No transactions found</p>
-
     </template>
+
     <template v-else>
         <q-infinite-scroll :handler="loadMore" ref="scroller">
-            <q-list link no-border class="tx-list">
+            <q-list link no-border :dark="theme=='dark'" class="tx-list">
                 <q-item v-for="(tx, index) in tx_list" :key="tx.txid"
                         @click.native="details(tx)" :class="'tx-'+tx.type">
                     <q-item-side>
@@ -27,6 +26,26 @@
                             </timeago>
                         </q-item-tile>
                     </q-item-side>
+
+                    <q-context-menu>
+                        <q-list link separator style="min-width: 150px; max-height: 300px;">
+                            <q-item v-close-overlay
+                                    @click.native="details(tx)">
+                                <q-item-main label="Show details" />
+                            </q-item>
+
+                            <q-item v-close-overlay
+                                    @click.native="copyTxid(tx.txid, $event)">
+                                <q-item-main label="Copy transaction id" />
+                            </q-item>
+
+                            <q-item v-close-overlay
+                                    @click.native="openExplorer(tx.txid)">
+                                <q-item-main label="View on explorer" />
+                            </q-item>
+                        </q-list>
+                    </q-context-menu>
+
                 </q-item>
                 <q-spinner-dots slot="message" :size="40"></q-spinner-dots>
             </q-list>
@@ -39,6 +58,7 @@
 </template>
 
 <script>
+const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import { QSpinnerDots } from "quasar"
 import Identicon from "components/identicon"
@@ -63,6 +83,11 @@ export default {
             required: false,
             default: "all"
         },
+        txid: {
+            type: String,
+            required: false,
+            default: ""
+        },
         toOutgoingAddress: {
             type: String,
             required: false,
@@ -75,13 +100,21 @@ export default {
         },
     },
     computed: mapState({
+        theme: state => state.gateway.app.config.appearance.theme,
         current_height: state => state.gateway.daemon.info.height,
         tx_list_all: state => state.gateway.wallet.transactions.tx_list,
         tx_list (state) {
             let tx_list_filter = this.tx_list_all.filter((tx) => {
                 let valid = true
-                if(this.type !== "all" && this.type !== tx.type)
+                if(this.type !== "all" && this.type !== tx.type) {
                     valid = false
+                    return valid
+                }
+
+                if(this.txid !== "") {
+                    valid = tx.txid.toLowerCase().indexOf(this.txid.toLowerCase()) !== -1
+                    return valid
+                }
 
                 if(this.toOutgoingAddress !== "") {
                     if(tx.hasOwnProperty("destinations")) {
@@ -89,10 +122,12 @@ export default {
                     } else {
                         valid = false
                     }
+                    return valid
                 }
 
                 if(this.toIncomingAddressIndex !== -1) {
                     valid = tx.hasOwnProperty("subaddr_index") && tx.subaddr_index.minor == this.toIncomingAddressIndex
+                    return valid
                 }
 
                 return valid
@@ -127,10 +162,39 @@ export default {
             if(this.limit !== -1 || this.tx_list.length < this.page * 24 + 24)
                 this.$refs.scroller.stop()
             done()
-        }
+        },
+        copyTxid (txid, event) {
+            event.stopPropagation()
+            for(let i = 0; i < event.path.length; i++) {
+                if(event.path[i].tagName == "BUTTON") {
+                    event.path[i].blur()
+                    break
+                }
+            }
+            clipboard.writeText(txid)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Txid copied to clipboard"
+            })
+        },
+        openExplorer (txid) {
+            this.$gateway.send("core", "open_explorer", {type: "tx", id: txid})
+        },
     },
     watch: {
         type: {
+            handler(val, old){
+                if(val == old) return
+                if(this.$refs.scroller) {
+                    this.$refs.scroller.stop()
+                    this.page = 0
+                    this.$refs.scroller.reset()
+                    this.$refs.scroller.resume()
+                }
+            }
+        },
+        txid: {
             handler(val, old){
                 if(val == old) return
                 if(this.$refs.scroller) {
@@ -153,50 +217,4 @@ export default {
 </script>
 
 <style lang="scss">
-.tx-list {
-
-    .q-item.tx-in,
-    .q-item.tx-pool {
-        .q-icon {
-            color: #333;
-        }
-        .q-item-label {
-            color: green;
-        }
-        &>div:last-child {
-            text-align:right;
-            &>div:first-child {
-                span {
-                    color: green;
-                    &:before {
-                        content: "+";
-                        color: green;
-                    }
-                }
-            }
-        }
-    }
-
-    .q-item.tx-out,
-    .q-item.tx-pending {
-        .q-icon {
-            color: #333;
-        }
-        .q-item-label {
-            color: purple;
-        }
-        &>div:last-child {
-            text-align:right;
-            &>div:first-child {
-                span {
-                    color: purple;
-                    &:before {
-                        content: "-";
-                        color: purple;
-                    }
-                }
-            }
-        }
-    }
-}
 </style>

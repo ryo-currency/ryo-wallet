@@ -1,6 +1,7 @@
 import { Daemon } from "./daemon";
 import { WalletRPC } from "./wallet-rpc";
 import { SCEE } from "./SCEE-Node";
+import { dialog } from "electron";
 
 const WebSocket = require("ws");
 const os = require("os");
@@ -8,7 +9,8 @@ const fs = require("fs");
 const path = require("path");
 
 export class Backend {
-    constructor() {
+    constructor(mainWindow) {
+        this.mainWindow = mainWindow
         this.daemon = null
         this.walletd = null
         this.wss = null
@@ -43,6 +45,10 @@ export class Backend {
                 data_dir: this.config_dir,
                 ws_bind_port: 12213,
                 testnet: false
+            },
+
+            appearance: {
+                theme: "light"
             },
 
             daemon: {
@@ -123,10 +129,24 @@ export class Backend {
         let params = data.data
 
         switch (data.method) {
+            case "quick_save_config":
+                // save only partial config settings
+                Object.keys(params).map(key => {
+                    this.config_data[key] = Object.assign(this.config_data[key], params[key])
+                })
+                fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), 'utf8', () => {
+                    this.send("set_app_data", {
+                        config: params,
+                        pending_config: params
+                    })
+                })
+                break
+
             case "save_config":
                 // check if config has changed
                 let config_changed = false
                 Object.keys(this.config_data).map(i => {
+                    if(i == "appearance") return
                     Object.keys(this.config_data[i]).map(j => {
                         if(this.config_data[i][j] !== params[i][j])
                             config_changed = true
@@ -140,13 +160,14 @@ export class Backend {
 
                     if(data.method == "save_config_init") {
                         this.startup();
-                    } else if(config_changed) {
+                    } else {
                         this.send("set_app_data", {
                             config: this.config_data,
                             pending_config: this.config_data,
-                        });
-
-                        this.send("settings_changed_reboot")
+                        })
+                        if(config_changed) {
+                            this.send("settings_changed_reboot")
+                        }
                     }
                 });
                 break;
@@ -162,6 +183,24 @@ export class Backend {
 
             case "open_url":
                 require("electron").shell.openExternal(params.url)
+                break;
+
+            case "save_png":
+                let filename = dialog.showSaveDialog(this.mainWindow, {
+                    title: "Save "+params.type,
+                    filters: [{name: "PNG", extensions:["png"]}],
+                    defaultPath: os.homedir()
+                })
+                if(filename) {
+                    let base64Data = params.img.replace(/^data:image\/png;base64,/,"")
+                    let binaryData = new Buffer(base64Data, 'base64').toString("binary")
+                    fs.writeFile(filename, binaryData, "binary", (err) => {
+                        if(err)
+                            this.send("show_notification", {type: "negative", message: "Error saving "+params.type, timeout: 2000})
+                        else
+                            this.send("show_notification", {message: params.type+" saved to "+filename, timeout: 2000})
+                    })
+                }
                 break;
 
             default:
@@ -185,6 +224,8 @@ export class Backend {
 
             // semi-shallow object merge
             Object.keys(disk_config_data).map(key => {
+                if(!this.config_data.hasOwnProperty(key))
+                    this.config_data[key] = {}
                 this.config_data[key] = Object.assign(this.config_data[key], disk_config_data[key])
             });
 
@@ -272,18 +313,35 @@ export class Backend {
                             }
                         });
                     }).catch(error => {
-                        // send an unrecoverable error to frontend
-                        // wallet-rpc cannot start or be reached
+                        this.send("set_app_data", {
+                            status: {
+                                code: -1 // Return to config screen
+                            }
+                        });
+                        return;
                     });
 
                 }).catch(error => {
-                    // send an unrecoverable error to frontend
-                    // daemon cannot start or be reached
+                    if(this.config_data.daemon.type == "remote") {
+                        this.send("show_notification", {type: "negative", message: "Remote daemon cannot be reached", timeout: 2000})
+                    } else {
+                        this.send("show_notification", {type: "negative", message: "Local daemon internal error", timeout: 2000})
+                    }
+                    this.send("set_app_data", {
+                        status: {
+                            code: -1 // Return to config screen
+                        }
+                    });
+                    return;
                 });
 
             }).catch(error => {
-                // send an unrecoverable error to frontend
-                // daemon cannot start or be reached
+                this.send("set_app_data", {
+                    status: {
+                        code: -1 // Return to config screen
+                    }
+                });
+                return;
             });
 
         });

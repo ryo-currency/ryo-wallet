@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron"
-import { Dialog, Loading } from "quasar"
+import { Notify, Dialog, Loading, LocalStorage } from "quasar"
 import { SCEE } from "./SCEE-Node";
 import * as WebSocket from "ws"
 
@@ -12,6 +12,18 @@ export class Gateway {
         this.token = null
         this.scee = new SCEE()
 
+        let theme = LocalStorage.has("theme") ? LocalStorage.get.item("theme") : "light"
+        this.app.store.commit("gateway/set_app_data", {
+            config: {
+                appearance: {
+                    theme
+                }
+            }
+        });
+        this.app.store.watch( state => state.gateway.app.config.appearance.theme, (theme) => {
+            LocalStorage.set("theme", theme)
+        })
+
         this.closeDialog = false
 
         this.app.store.commit("gateway/set_app_data", {
@@ -22,9 +34,11 @@ export class Gateway {
 
         ipcRenderer.on("initialize", (event, data) => {
             this.token = data.token
-            this.ws = new WebSocket("ws://127.0.0.1:"+data.port);
-            this.ws.on("open", () => {this.open()});
-            this.ws.on("message", (message) => {this.receive(message)});
+            setTimeout(() => {
+                this.ws = new WebSocket("ws://127.0.0.1:"+data.port);
+                this.ws.on("open", () => {this.open()});
+                this.ws.on("message", (message) => {this.receive(message)});
+            }, 1000);
         });
 
         ipcRenderer.on("confirmClose", () => {
@@ -55,7 +69,8 @@ export class Gateway {
             },
             cancel: {
                 flat: true,
-                label: "CANCEL"
+                label: "CANCEL",
+                color: this.app.store.state.gateway.app.config.appearance.theme=="dark"?"white":"dark"
             }
         }).then(() => {
             this.closeDialog = false
@@ -67,7 +82,6 @@ export class Gateway {
         })
 
     }
-
 
     send(module, method, data={}) {
         let message = {
@@ -116,6 +130,24 @@ export class Gateway {
 
             case "settings_changed_reboot":
                 this.confirmClose("Changes require restart. Would you like to exit now?")
+                break
+
+            case "show_notification":
+                let notification = {
+                    type: "positive",
+                    timeout: 1000,
+                    message: ""
+                }
+                Notify.create(Object.assign(notification, decrypted_data.data))
+                break
+
+            case "return_to_wallet_select":
+                this.router.replace({ path: "/wallet-select" })
+                setTimeout(() => {
+                    // short delay to prevent wallet data reaching the
+                    // websocket moments after we close and reset data
+                    this.app.store.dispatch("gateway/resetWalletData")
+                }, 250);
                 break
 
         }
