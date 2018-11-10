@@ -44,17 +44,17 @@ Ryo wallet will scan default folders used by Lite wallet and GUI wallet and will
 ---
 
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/01-initialize.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/02_wallet-select-1.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/03_wallet-select-2.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/04_wallet-main.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/05_wallet-receive-1.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/06_wallet-receive-2.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/07_wallet-send.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/08_wallet-address-book-1.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/02_wallet-select-1-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/03_wallet-select-2-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/04_wallet-main-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/05_wallet-receive-1-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/06_wallet-receive-2-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/07_wallet-send-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/08_wallet-address-book-1-light.png)
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/09_wallet-address-book-2.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/10_wallet-address-book-3.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/11_tx-history.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/12_switch-wallet.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/10_wallet-address-book-3-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/11_tx-history-light.png)
+![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/12_switch-wallet-light.png)
 
 ---
 
