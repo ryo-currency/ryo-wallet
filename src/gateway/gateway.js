@@ -1,7 +1,6 @@
 import { ipcRenderer } from "electron"
 import { Notify, Dialog, Loading, LocalStorage } from "quasar"
 import { SCEE } from "./SCEE-Node";
-import * as WebSocket from "ws"
 
 export class Gateway {
 
@@ -36,8 +35,8 @@ export class Gateway {
             this.token = data.token
             setTimeout(() => {
                 this.ws = new WebSocket("ws://127.0.0.1:"+data.port);
-                this.ws.on("open", () => {this.open()});
-                this.ws.on("message", (message) => {this.receive(message)});
+                this.ws.addEventListener("open", () => {this.open()});
+                this.ws.addEventListener("message", (event) => {this.receive(event.data)});
             }, 1000);
         });
 
