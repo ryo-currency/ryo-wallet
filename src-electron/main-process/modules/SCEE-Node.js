@@ -38,10 +38,10 @@ export class SCEE {
         let salt = crypto.randomBytes(PBKDF2_SALT_SIZE);
 
         // Derive a key using PBKDF2.
-        let key = crypto.pbkdf2Sync(new Buffer(password, "utf8"), salt, PBKDF2_ITERATIONS, ALGORITHM_KEY_SIZE, PBKDF2_NAME);
+        let key = crypto.pbkdf2Sync(Buffer.from(password, "utf8"), salt, PBKDF2_ITERATIONS, ALGORITHM_KEY_SIZE, PBKDF2_NAME);
 
         // Encrypt and prepend salt.
-        let ciphertextAndNonceAndSalt = Buffer.concat([ salt, this.encrypt(new Buffer(plaintext, "utf8"), key) ]);
+        let ciphertextAndNonceAndSalt = Buffer.concat([ salt, this.encrypt(Buffer.from(plaintext, "utf8"), key) ]);
 
         // Return as base64 string.
         return ciphertextAndNonceAndSalt.toString("base64");
@@ -49,14 +49,14 @@ export class SCEE {
 
     decryptString(base64CiphertextAndNonceAndSalt, password) {
         // Decode the base64.
-        let ciphertextAndNonceAndSalt = new Buffer(base64CiphertextAndNonceAndSalt, "base64");
+        let ciphertextAndNonceAndSalt = Buffer.from(base64CiphertextAndNonceAndSalt, "base64");
 
         // Create buffers of salt and ciphertextAndNonce.
         let salt = ciphertextAndNonceAndSalt.slice(0, PBKDF2_SALT_SIZE);
         let ciphertextAndNonce = ciphertextAndNonceAndSalt.slice(PBKDF2_SALT_SIZE);
 
         // Derive the key using PBKDF2.
-        let key = crypto.pbkdf2Sync(new Buffer(password, "utf8"), salt, PBKDF2_ITERATIONS, ALGORITHM_KEY_SIZE, PBKDF2_NAME);
+        let key = crypto.pbkdf2Sync(Buffer.from(password, "utf8"), salt, PBKDF2_ITERATIONS, ALGORITHM_KEY_SIZE, PBKDF2_NAME);
 
         // Decrypt and return result.
         return this.decrypt(ciphertextAndNonce, key).toString("utf8");
