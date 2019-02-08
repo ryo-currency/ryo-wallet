@@ -1,5 +1,5 @@
 <template>
-<q-layout view="hHh Lpr lFf">
+<q-layout view="hHh Lpr lFf" style="overflow-x:hidden">
     <q-layout-header class="shift-title">
         <main-menu />
 

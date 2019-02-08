@@ -1,5 +1,5 @@
 <template>
-<q-modal v-model="isVisible" maximized :content-css="{padding: '50px'}">
+<q-modal v-model="isVisible" maximized>
     <q-modal-layout>
         <q-toolbar slot="header" color="dark" inverted>
             <q-btn

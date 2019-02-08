@@ -18,7 +18,7 @@
                     <q-input v-model="wallet.path" stack-label="Wallet file" disable :dark="theme=='dark'" />
                     <input type="file" id="walletPath" v-on:change="setWalletPath" ref="fileInput" hidden />
                 </div>
-                <div class="col-auto">
+                <div class="col-auto self-end">
                     <q-btn v-on:click="selectFile" class="float-right" :text-color="theme=='dark'?'white':'dark'">Select wallet file</q-btn>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 <template>
 <div>
-    <q-btn class="menu" icon="menu" label="" size="md" flat>
+    <q-btn class="menu" label="" size="md" flat>
+        <q-icon name="menu" />
         <q-popover>
             <q-list separator link>
                 <q-item v-close-overlay @click.native="switchWallet" v-if="!disableSwitchWallet">

@@ -17,7 +17,7 @@
     </p>
 
     <q-field v-if="config.daemon.type != 'remote'">
-        <div class="row gutter-sm">
+        <div class="row gutter-sm items-end">
             <div class="col-8">
                 <q-input v-model="config.daemon.rpc_bind_ip" float-label="Local Daemon IP"
                          :dark="theme=='dark'" disable />
@@ -29,7 +29,7 @@
     </q-field>
 
     <q-field v-if="config.daemon.type != 'local'">
-        <div class="row gutter-sm">
+        <div class="row gutter-sm items-end">
             <div class="col-8">
                 <q-input v-model="config.daemon.remote_host" float-label="Remote Node Host" :dark="theme=='dark'" />
             </div>
@@ -41,13 +41,17 @@
     </q-field>
 
     <q-field>
-        <div class="row gutter-sm">
+        <div class="row gutter-sm items-end">
             <div class="col-8">
                 <q-input v-model="config.app.data_dir" stack-label="Data Storage Path" disable :dark="theme=='dark'" />
                 <input type="file" webkitdirectory directory id="dataPath" v-on:change="setDataPath" ref="fileInput" hidden />
             </div>
             <div class="col-4">
-                <q-btn v-on:click="selectPath" :text-color="theme=='dark'?'white':'dark'">Select Location</q-btn>
+                <q-btn v-on:click="selectPath"
+                       :color="theme=='dark'?'dark':'standard'"
+                       :text-color="theme=='dark'?'white':'dark'">
+                    Select Location
+                </q-btn>
             </div>
         </div>
     </q-field>
@@ -55,7 +59,7 @@
     <q-collapsible label="Advanced Options" header-class="non-selectable row reverse advanced-options-label">
 
         <q-field>
-            <div class="row gutter-sm">
+            <div class="row gutter-sm items-end">
                 <div class="col-3">
                     <q-input v-model="config.daemon.log_level" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
                              float-label="Daemon Log Level" type="number" :decimals="0" :step="1" min="0" max="4" />
@@ -64,13 +68,13 @@
                     <q-input v-model="config.wallet.log_level" :dark="theme=='dark'"
                              float-label="Wallet Log Level" type="number" :decimals="0" :step="1" min="0" max="4" />
                 </div>
-                <div class="col-3">
+                <div class="col-3 self-center">
                     <q-checkbox v-model="config.app.testnet" label="Testnet" />
                 </div>
             </div>
         </q-field>
         <q-field>
-            <div class="row gutter-sm">
+            <div class="row gutter-sm items-end">
                 <div class="col-3">
                     <q-input v-model="config.daemon.in_peers" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
                              float-label="Max Incoming Peers" type="number" :decimals="0" :step="1" min="-1" max="65535" />
@@ -90,7 +94,7 @@
             </div>
         </q-field>
         <q-field>
-            <div class="row gutter-sm">
+            <div class="row gutter-sm items-end">
                 <div class="col-3">
                     <q-input v-model="config.daemon.p2p_bind_port" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
                              float-label="Daemon P2P Port" type="number" :decimals="0" :step="1" min="1024" max="65535" />
