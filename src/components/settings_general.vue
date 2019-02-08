@@ -56,6 +56,18 @@
         </div>
     </q-field>
 
+    <q-field v-if="config.daemon.type != 'remote'">
+        <div class="row gutter-sm items-end">
+            <div class="col-8">
+                <q-select :dark="theme=='dark'"
+                          v-model="config.daemon.enhanced_ip_privacy"
+                          float-label="Do you plan to keep the wallet turned on 24/7?"
+                          :options="enhancedPrivacyOptions"
+                          />
+            </div>
+        </div>
+    </q-field>
+
     <q-collapsible label="Advanced Options" header-class="non-selectable row reverse advanced-options-label">
 
         <q-field>
@@ -68,6 +80,15 @@
                     <q-input v-model="config.wallet.log_level" :dark="theme=='dark'"
                              float-label="Wallet Log Level" type="number" :decimals="0" :step="1" min="0" max="4" />
                 </div>
+
+                <!--
+                <template v-if="config.daemon.type != 'remote'">
+                    <div class="col-3 self-center">
+                        <q-checkbox v-model="config.daemon.enhanced_ip_privacy" label="Enhanced IP Privacy" />
+                    </div>
+                </template>
+                -->
+
                 <div class="col-3 self-center">
                     <q-checkbox v-model="config.app.testnet" label="Testnet" />
                 </div>
@@ -85,11 +106,11 @@
                 </div>
                 <div class="col-3">
                     <q-input v-model="config.daemon.limit_rate_up" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
-                             float-label="Limit Upload Rate" type="number" suffix="Kb/s" :decimals="0" :step="1" min="-1" max="65535" />
+                             float-label="Limit Upload Rate" type="number" suffix="kB/s" :decimals="0" :step="1" min="-1" max="65535" />
                 </div>
                 <div class="col-3">
                     <q-input v-model="config.daemon.limit_rate_down" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
-                             float-label="Limit Download Rate" type="number" suffix="Kb/s" :decimals="0" :step="1" min="-1" max="65535" />
+                             float-label="Limit Download Rate" type="number" suffix="kB/s" :decimals="0" :step="1" min="-1" max="65535" />
                 </div>
             </div>
         </q-field>
@@ -122,6 +143,14 @@
 import { mapState } from "vuex"
 export default {
     name: "SettingsGeneral",
+    data () {
+        return {
+            enhancedPrivacyOptions: [
+                {label: "No - private network mode", value: true},
+                {label: "Yes - interconnected network mode", value: false}
+            ],
+        }
+    },
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
         config: state => state.gateway.app.pending_config,

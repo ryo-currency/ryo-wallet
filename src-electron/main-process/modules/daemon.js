@@ -94,8 +94,6 @@ export class Daemon {
 
             const args = [
                 "--data-dir", options.app.data_dir,
-                "--p2p-bind-ip", options.daemon.p2p_bind_ip,
-                "--p2p-bind-port", options.daemon.p2p_bind_port,
                 "--rpc-bind-ip", options.daemon.rpc_bind_ip,
                 "--rpc-bind-port", options.daemon.rpc_bind_port,
                 "--zmq-rpc-bind-ip", options.daemon.zmq_rpc_bind_ip,
@@ -106,6 +104,20 @@ export class Daemon {
                 "--limit-rate-down", options.daemon.limit_rate_down,
                 "--log-level", options.daemon.log_level,
             ];
+
+            if(options.daemon.enhanced_ip_privacy) {
+                args.push(
+                    "--p2p-bind-ip", "127.0.0.1",
+                    "--p2p-bind-port", options.daemon.p2p_bind_port,
+                    "--no-igd",
+                    "--hide-my-port"
+                )
+            } else {
+                args.push(
+                    "--p2p-bind-ip", options.daemon.p2p_bind_ip,
+                    "--p2p-bind-port", options.daemon.p2p_bind_port
+                )
+            }
 
             if(options.app.testnet) {
                 this.testnet = true

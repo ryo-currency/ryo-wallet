@@ -62,11 +62,12 @@ export class Backend {
                 rpc_bind_port: 12211,
                 zmq_rpc_bind_ip: "127.0.0.1",
                 zmq_rpc_bind_port: 12212,
-                out_peers: -1,
-                in_peers: -1,
+                out_peers: 8,
+                in_peers: 0,
                 limit_rate_up: -1,
                 limit_rate_down: -1,
-                log_level: 0
+                log_level: 0,
+                enhanced_ip_privacy: true
             },
 
             wallet: {
