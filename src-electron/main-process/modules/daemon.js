@@ -46,6 +46,26 @@ export class Daemon {
         })
     }
 
+    checkRemoteDaemon(options) {
+        if(options.daemon.type == "local") {
+            return new Promise((resolve, reject) => {
+                resolve({
+                    result: {
+                        mainnet: !options.app.testnet,
+                        testnet: options.app.testnet,
+                    }
+                })
+            })
+        } else {
+            let uri = `http://${options.daemon.remote_host}:${options.daemon.remote_port}/json_rpc`
+            return new Promise((resolve, reject) => {
+                this.sendRPC("get_info", {}, uri).then((data) => {
+                    resolve(data)
+                })
+            })
+        }
+    }
+
     start(options) {
 
         if(options.daemon.type === "remote") {
@@ -344,10 +364,10 @@ export class Daemon {
         this.backend.send(method, data)
     }
 
-    sendRPC(method, params={}) {
+    sendRPC(method, params={}, uri=false) {
         let id = this.id++
         let options = {
-            uri: `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
+            uri: uri ? uri : `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
             method: "POST",
             json: {
                 jsonrpc: "2.0",

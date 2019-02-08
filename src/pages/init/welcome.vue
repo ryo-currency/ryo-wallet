@@ -137,6 +137,11 @@ export default {
                     appearance: {
                         theme: val
                     }
+                },
+                pending_config: {
+                    appearance: {
+                        theme: val
+                    }
                 }
             });
         }

@@ -84,9 +84,6 @@ export class WalletRPC {
                 if (fs.existsSync(log_file))
                     fs.truncateSync(log_file, 0)
 
-                if (!fs.existsSync(this.wallet_dir))
-                    fs.mkdirSync(this.wallet_dir)
-
                 if (process.platform === "win32") {
                     this.walletRPCProcess = child_process.spawn(path.join(__ryo_bin, "ryo-wallet-rpc.exe"), args)
                 } else {
