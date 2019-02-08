@@ -51,6 +51,10 @@ export class Backend {
             appearance: {
                 theme: "light"
             },
+            preference: {
+                notify_no_payment_id: true,
+                notify_empty_password: true
+            },
 
             daemon: {
                 type: "local_remote",
