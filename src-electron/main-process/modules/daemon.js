@@ -1,6 +1,8 @@
 import child_process from "child_process";
-import request from "request-promise";
-const fs = require('fs');
+const request = require("request-promise");
+const queue = require("promise-queue");
+const http = require("http");
+const fs = require("fs");
 const path = require("path");
 
 export class Daemon {
@@ -11,6 +13,10 @@ export class Daemon {
         this.id = 0
         this.testnet = false
         this.local = false // do we have a local daemon ?
+
+        this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
+        this.queue = new queue(1, Infinity)
+
     }
 
 
@@ -341,42 +347,46 @@ export class Daemon {
     sendRPC(method, params={}) {
         let id = this.id++
         let options = {
-            forever: true,
+            uri: `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
+            method: "POST",
             json: {
                 jsonrpc: "2.0",
                 id: id,
                 method: method
             },
+            agent: this.agent
         };
-        if (Object.keys(params).length !== 0) {
+        if(Object.keys(params).length !== 0) {
             options.json.params = params;
         }
 
-        return request.post(`${this.protocol}${this.hostname}:${this.port}/json_rpc`, options)
-            .then((response) => {
-                if(response.hasOwnProperty("error")) {
+        return this.queue.add(() => {
+            return request(options)
+                .then((response) => {
+                    if(response.hasOwnProperty("error")) {
+                        return {
+                            method: method,
+                            params: params,
+                            error: response.error
+                        }
+                    }
                     return {
                         method: method,
                         params: params,
-                        error: response.error
+                        result: response.result
                     }
-                }
-                return {
-                    method: method,
-                    params: params,
-                    result: response.result
-                }
-            }).catch(error => {
-                return {
-                    method: method,
-                    params: params,
-                    error: {
-                        code: -1,
-                        message: "Cannot connect to daemon-rpc",
-                        cause: error.cause
+                }).catch(error => {
+                    return {
+                        method: method,
+                        params: params,
+                        error: {
+                            code: -1,
+                            message: "Cannot connect to daemon-rpc",
+                            cause: error.cause
+                        }
                     }
-                }
-            })
+                })
+        })
     }
 
     /**
@@ -391,6 +401,7 @@ export class Daemon {
         return new Promise((resolve, reject) => {
             if (this.daemonProcess) {
                 this.daemonProcess.on("close", code => {
+                    this.agent.destroy()
                     resolve()
                 })
                 this.daemonProcess.kill()

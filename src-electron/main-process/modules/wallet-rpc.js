@@ -1,5 +1,7 @@
 import child_process from "child_process";
 const request = require("request-promise");
+const queue = require("promise-queue");
+const http = require("http");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
@@ -28,6 +30,8 @@ export class WalletRPC {
         this.height_regex2 = /Skipped block by height: (\d+)/
         this.height_regex3 = /Skipped block by timestamp, height: (\d+)/
 
+        this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
+        this.queue = new queue(1, Infinity)
 
     }
 
@@ -52,8 +56,7 @@ export class WalletRPC {
                 ]
 
                 const args = [
-                    //"--rpc-login", this.auth[0]+":"+this.auth[1],
-                    "--disable-rpc-login",
+                    "--rpc-login", this.auth[0]+":"+this.auth[1],
                     "--rpc-bind-port", options.wallet.rpc_bind_port,
                     "--daemon-address", daemon_address,
                     //"--log-level", options.wallet.log_level,
@@ -1228,52 +1231,54 @@ export class WalletRPC {
     sendRPC(method, params={}, timeout=0) {
         let id = this.id++
         let options = {
-            forever: true,
+            uri: `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
+            method: "POST",
             json: {
                 jsonrpc: "2.0",
                 id: id,
                 method: method
             },
-            /*
             auth: {
                 user: this.auth[0],
                 pass: this.auth[1],
                 sendImmediately: false
-            }
-            */
+            },
+            agent: this.agent
         };
-        if (Object.keys(params).length !== 0) {
+        if(Object.keys(params).length !== 0) {
             options.json.params = params
         }
         if(timeout) {
             options.timeout = timeout
         }
 
-        return request.post(`${this.protocol}${this.hostname}:${this.port}/json_rpc`, options)
-            .then((response) => {
-                if(response.hasOwnProperty("error")) {
+        return this.queue.add(() => {
+            return request(options)
+                .then((response) => {
+                    if(response.hasOwnProperty("error")) {
+                        return {
+                            method: method,
+                            params: params,
+                            error: response.error
+                        }
+                    }
                     return {
                         method: method,
                         params: params,
-                        error: response.error
+                        result: response.result
                     }
-                }
-                return {
-                    method: method,
-                    params: params,
-                    result: response.result
-                }
-            }).catch(error => {
-                return {
-                    method: method,
-                    params: params,
-                    error: {
-                        code: -1,
-                        message: "Cannot connect to wallet-rpc",
-                        cause: error.cause
+                }).catch(error => {
+                    return {
+                        method: method,
+                        params: params,
+                        error: {
+                            code: -1,
+                            message: "Cannot connect to wallet-rpc",
+                            cause: error.cause
+                        }
                     }
-                }
-            })
+                })
+        })
     }
 
     getRPC(parameter, params={}) {
@@ -1290,6 +1295,7 @@ export class WalletRPC {
                 })
                 setTimeout(() => {
                     this.walletRPCProcess.on("close", code => {
+                        this.agent.destroy()
                         resolve()
                     })
                     this.walletRPCProcess.kill()

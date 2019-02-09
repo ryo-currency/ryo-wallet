@@ -1,21 +1,21 @@
 <template>
 <div>
 
-    <template v-if="tx_list.length === 0">
+    <template v-if="tx_list_paged.length === 0">
         <p class="q-pa-md q-mb-none">No transactions found</p>
     </template>
 
     <template v-else>
         <q-infinite-scroll :handler="loadMore" ref="scroller">
             <q-list link no-border :dark="theme=='dark'" class="tx-list">
-                <q-item v-for="(tx, index) in tx_list" :key="tx.txid"
+                <q-item v-for="(tx, index) in tx_list_paged" :key="tx.txid"
                         @click.native="details(tx)" :class="'tx-'+tx.type">
                     <q-item-side>
                         <TxTypeIcon :type="tx.type" />
                     </q-item-side>
                     <q-item-main>
                         <q-item-tile class="monospace ellipsis" label>{{ tx.txid }}</q-item-tile>
-                        <q-item-tile sublabel>{{ formatHeight(tx.height) }}</q-item-tile>
+                        <q-item-tile sublabel>{{ formatHeight(tx) }}</q-item-tile>
                     </q-item-main>
                     <q-item-side>
                         <q-item-tile label>
@@ -67,11 +67,6 @@ import TxDetails from "components/tx_details"
 import FormatRyo from "components/format_ryo"
 export default {
     name: "TxList",
-    data () {
-        return {
-            page: 0
-        }
-    },
     props: {
         limit: {
             type: Number,
@@ -99,12 +94,68 @@ export default {
             default: -1
         },
     },
+    data () {
+        return {
+            page: 0,
+            tx_list_filtered: [],
+            tx_list_paged: []
+        }
+    },
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
         current_height: state => state.gateway.daemon.info.height,
-        tx_list_all: state => state.gateway.wallet.transactions.tx_list,
-        tx_list (state) {
-            let tx_list_filter = this.tx_list_all.filter((tx) => {
+        wallet_height: state => state.gateway.wallet.info.height,
+        tx_list: state => state.gateway.wallet.transactions.tx_list
+    }),
+    created () {
+        this.filterTxList()
+        this.pageTxList()
+    },
+    watch: {
+        wallet_height: {
+            handler(val, old){
+                if(val == old) return
+                this.filterTxList()
+                this.pageTxList()
+            }
+        },
+        tx_list: {
+            handler(val, old){
+                if(val.length == old.length) return
+                this.filterTxList()
+                this.pageTxList()
+            }
+        },
+        type: {
+            handler(val, old){
+                if(val == old) return
+                if(this.$refs.scroller) {
+                    this.$refs.scroller.stop()
+                    this.page = 0
+                    this.$refs.scroller.reset()
+                    this.$refs.scroller.resume()
+                }
+                this.filterTxList()
+                this.pageTxList()
+            }
+        },
+        txid: {
+            handler(val, old){
+                if(val == old) return
+                if(this.$refs.scroller) {
+                    this.$refs.scroller.stop()
+                    this.page = 0
+                    this.$refs.scroller.reset()
+                    this.$refs.scroller.resume()
+                }
+                this.filterTxList()
+                this.pageTxList()
+            }
+        },
+    },
+    methods: {
+        filterTxList () {
+            this.tx_list_filtered = this.tx_list.filter((tx) => {
                 let valid = true
                 if(this.type !== "all" && this.type !== tx.type) {
                     valid = false
@@ -132,36 +183,34 @@ export default {
 
                 return valid
             })
-
-            if(this.limit !== -1) {
-                tx_list_filter = tx_list_filter.slice(0, this.limit)
-            } else {
-                tx_list_filter = tx_list_filter.slice(0, this.page * 24 + 24)
-            }
-
-            return tx_list_filter
         },
-    }),
-    methods: {
+        pageTxList () {
+            this.tx_list_paged = this.tx_list_filtered.slice(0, this.limit !== -1 ? this.limit : this.page * 24 + 24)
+        },
+        loadMore: function(index, done) {
+            this.page = index
+            if(this.limit !== -1 || this.tx_list_filtered.length < this.page * 24 + 24) {
+                this.$refs.scroller.stop()
+            }
+            this.pageTxList()
+            this.$nextTick(() => {
+                done()
+            })
+        },
         details (tx) {
             this.$refs.txDetails.tx = tx;
             this.$refs.txDetails.txNotes = tx.note;
             this.$refs.txDetails.isVisible = true;
         },
-        formatHeight(height) {
-            let confirms = this.current_height - height;
+        formatHeight(tx) {
+            let height = tx.height;
+            let confirms = Math.max(0, this.wallet_height - height);
             if(height == 0)
                 return "Pending"
-            if(confirms < 10)
+            if(confirms < Math.max(10, tx.unlock_time - height))
                 return `Height: ${height} (${confirms} confirm${confirms==1?'':'s'})`
             else
                 return `Height: ${height} (confirmed)`
-        },
-        loadMore: function(index, done) {
-            this.page = index
-            if(this.limit !== -1 || this.tx_list.length < this.page * 24 + 24)
-                this.$refs.scroller.stop()
-            done()
         },
         copyTxid (txid, event) {
             event.stopPropagation()
@@ -180,30 +229,6 @@ export default {
         },
         openExplorer (txid) {
             this.$gateway.send("core", "open_explorer", {type: "tx", id: txid})
-        },
-    },
-    watch: {
-        type: {
-            handler(val, old){
-                if(val == old) return
-                if(this.$refs.scroller) {
-                    this.$refs.scroller.stop()
-                    this.page = 0
-                    this.$refs.scroller.reset()
-                    this.$refs.scroller.resume()
-                }
-            }
-        },
-        txid: {
-            handler(val, old){
-                if(val == old) return
-                if(this.$refs.scroller) {
-                    this.$refs.scroller.stop()
-                    this.page = 0
-                    this.$refs.scroller.reset()
-                    this.$refs.scroller.resume()
-                }
-            }
         }
     },
     components: {
