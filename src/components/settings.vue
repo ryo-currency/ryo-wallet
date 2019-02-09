@@ -25,9 +25,9 @@
             </div>
         </div>
 
-        <div v-if="page=='appearance'">
+        <div v-if="page=='preferences'">
             <div class="q-pa-md">
-                <h6 class="q-mb-md q-mt-none" style="font-weight: 300">Select Appearance:</h6>
+                <h6 class="q-mb-md q-mt-none" style="font-weight: 300">Appearance:</h6>
 
                 <q-btn-toggle
                     v-model="theme"
@@ -37,7 +37,20 @@
                               {label: 'Light theme', value: 'light', icon: 'brightness_5'},
                               {label: 'Dark theme', value: 'dark', icon: 'brightness_2'},
                               ]"
-                />
+                    />
+
+
+                <h6 class="q-mb-md" style="font-weight: 300">Preferences:</h6>
+
+                <q-checkbox v-model="minimize_to_tray" label="Minimize to Tray" />
+
+                <h6 class="q-mb-md" style="font-weight: 300">Notifications:</h6>
+
+                <q-checkbox v-model="notify_no_payment_id" label="Notify when making transaction without Payment ID" />
+
+                <q-checkbox v-model="notify_empty_password" label="Notify when creating or restoring a wallet without an empty password" />
+
+
             </div>
         </div>
 
@@ -85,7 +98,7 @@ export default {
         tabs: function(state) {
             let tabs = [
                 {label: 'General', value: 'general', icon: 'settings'},
-                {label: 'Appearance', value: 'appearance', icon: 'visibility'},
+                {label: 'Preferences', value: 'preferences', icon: 'person'},
             ]
             if(state.gateway.app.config.daemon.type != 'remote') {
                 tabs.push({label: 'Peers', value: 'peers', icon: 'cloud_queue'})
@@ -97,11 +110,17 @@ export default {
         return {
             page: "general",
             theme: null,
+            minimize_to_tray: null,
+            notify_no_payment_id: null,
+            notify_empty_password: null,
             isVisible: false
         }
     },
     mounted: function () {
         this.theme = this.config.appearance.theme
+        this.minimize_to_tray = this.config.preference.minimize_to_tray === null ? false : this.config.preference.minimize_to_tray
+        this.notify_no_payment_id = this.config.preference.notify_no_payment_id
+        this.notify_empty_password = this.config.preference.notify_empty_password
     },
     watch: {
         theme: function (theme, old) {
@@ -109,6 +128,30 @@ export default {
             this.$gateway.send("core", "quick_save_config", {
                 appearance: {
                     theme: this.theme
+                }
+            })
+        },
+        minimize_to_tray: function (minimize_to_tray, old) {
+            if(old == null) return
+            this.$gateway.send("core", "quick_save_config", {
+                preference: {
+                    minimize_to_tray: this.minimize_to_tray
+                }
+            })
+        },
+        notify_no_payment_id: function (notify_no_payment_id, old) {
+            if(old == null) return
+            this.$gateway.send("core", "quick_save_config", {
+                preference: {
+                    notify_no_payment_id: this.notify_no_payment_id
+                }
+            })
+        },
+        notify_empty_password: function (notify_empty_password, old) {
+            if(old == null) return
+            this.$gateway.send("core", "quick_save_config", {
+                preference: {
+                    notify_empty_password: this.notify_empty_password
                 }
             })
         },
