@@ -79,9 +79,9 @@
                 <div class="col-6">
                     <q-field>
                         <q-select :dark="theme=='dark'"
-                                  v-model="newTx.mixin"
-                                  float-label="Mixin"
-                                  :options="mixinOptions"
+                                  v-model="newTx.ringsize"
+                                  float-label="Ring Size"
+                                  :options="ringsizeOptions"
                                   />
                     </q-field>
                 </div>
@@ -155,7 +155,7 @@ export default {
                 amount: 0,
                 address: "",
                 payment_id: "",
-                mixin: 12,
+                ringsize: 25,
                 priority: 0,
                 address_book: {
                     save: false,
@@ -163,10 +163,9 @@ export default {
                     description: ""
                 }
             },
-            mixinOptions: [
-                {label: "12 mixins (default)", value: 12},
-                {label: "48 mixins (top secret)", value: 48},
-                {label: "96 mixins (paranoid)", value: 60},
+            ringsizeOptions: [
+                {label: "25 ring members (default)", value: 25},
+                {label: "100 ring members (top secret)", value: 100},
             ],
             priorityOptions: [
                 {label: "Normal (x1 fee)", value: 0},
@@ -203,7 +202,7 @@ export default {
                             amount: 0,
                             address: "",
                             payment_id: "",
-                            mixin: 12,
+                            ringsize: 25,
                             priority: 0,
                             address_book: {
                                 save: false,

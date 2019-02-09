@@ -189,7 +189,7 @@ export class WalletRPC {
                 break
 
             case "transfer":
-                this.transfer(params.password, params.amount, params.address, params.payment_id, params.mixin, params.priority, params.address_book)
+                this.transfer(params.password, params.amount, params.address, params.payment_id, params.ringsize, params.priority, params.address_book)
                 break
 
             case "add_address_book":
@@ -612,7 +612,7 @@ export class WalletRPC {
 
     }
 
-    transfer (password, amount, address, payment_id, mixin, priority, address_book={}) {
+    transfer (password, amount, address, payment_id, ringsize, priority, address_book={}) {
 
         crypto.pbkdf2(password, this.auth[2], 1000, 64, "sha512", (err, password_hash) => {
             if (err) {
@@ -642,7 +642,7 @@ export class WalletRPC {
                     "address": address,
                     "account_index": 0,
                     "priority": priority,
-                    "mixin": mixin
+                    "mixin": ringsize-1
                 }
 
                 if(payment_id) {
@@ -673,7 +673,7 @@ export class WalletRPC {
                 let params = {
                     "destinations": [{"amount" : amount, "address": address}],
                     "priority": priority,
-                    "mixin": mixin
+                    "mixin": ringsize-1
                 }
 
                 if(payment_id) {
