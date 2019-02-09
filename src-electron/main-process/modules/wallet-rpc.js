@@ -23,6 +23,9 @@ export class WalletRPC {
             balance: null,
             unlocked_balance: null
         }
+        this.wallet_info = {
+            height: 0
+        }
 
         this.last_height_send_time = Date.now()
 
@@ -577,6 +580,9 @@ export class WalletRPC {
                             height: n.result.height
                         }
                     })
+                    this.wallet_info = {
+                        height: n.result.height
+                    }
 
                 } else if(n.method == "getbalance") {
                     if(this.wallet_state.balance == n.result.balance &&
@@ -1206,6 +1212,9 @@ export class WalletRPC {
                 password_hash: null,
                 balance: null,
                 unlocked_balance: null
+            }
+            this.wallet_info = {
+                height: 0
             }
 
             this.saveWallet().then(() => {

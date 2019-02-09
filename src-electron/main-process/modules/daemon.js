@@ -14,6 +14,8 @@ export class Daemon {
         this.testnet = false
         this.local = false // do we have a local daemon ?
 
+        this.daemon_info = {}
+
         this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
         this.queue = new queue(1, Infinity)
 
@@ -334,6 +336,7 @@ export class Daemon {
                     daemon_info.info = n.result
                 }
             }
+            this.daemon_info = daemon_info.info
             this.sendGateway("set_daemon_data", daemon_info)
         })
     }

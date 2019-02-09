@@ -1,23 +1,25 @@
-import { app, ipcMain, BrowserWindow, Menu, dialog } from "electron"
+import { app, ipcMain, BrowserWindow, Menu, Tray, dialog } from "electron"
 import { Backend } from "./modules/backend"
 import menuTemplate from "./menu"
 const portscanner = require("portscanner")
 const windowStateKeeper = require("electron-window-state")
+const path = require("path");
 
 /**
  * Set `__statics` path to static files in production;
  * The reason we are setting it here is that the path needs to be evaluated at runtime
  */
 if (process.env.PROD) {
-    global.__statics = require("path").join(__dirname, "statics").replace(/\\/g, "\\\\")
-    global.__ryo_bin = require("path").join(__dirname, "..", "bin").replace(/\\/g, "\\\\")
+    global.__statics = path.join(__dirname, "statics").replace(/\\/g, "\\\\")
+    global.__ryo_bin = path.join(__dirname, "..", "bin").replace(/\\/g, "\\\\")
 } else {
-    global.__ryo_bin = require("path").join(process.cwd(), "bin").replace(/\\/g, "\\\\")
+    global.__ryo_bin = path.join(process.cwd(), "bin").replace(/\\/g, "\\\\")
 }
 
-let mainWindow, backend
+let mainWindow, backend, tray
 let showConfirmClose = true
 let forceQuit = false
+let updateTrayInterval = null
 
 const portInUse = function(port, callback) {
     var server = net.createServer(function(socket) {
@@ -52,7 +54,7 @@ function createWindow() {
         height: mainWindowState.height,
         minWidth: 640,
         minHeight: 480,
-        icon: require("path").join(__statics, "icon_512x512.png")
+        icon: path.join(__statics, "icon_512x512.png")
     })
 
     mainWindow.on("close", (e) => {
@@ -83,12 +85,43 @@ function createWindow() {
     ipcMain.on("confirmClose", (e) => {
         showConfirmClose = false
         if (backend) {
+            if (process.platform !== "darwin") {
+                clearInterval(updateTrayInterval)
+                tray.setToolTip("Closing...")
+            }
             backend.quit().then(() => {
                 backend = null
                 app.quit()
             })
         } else {
             app.quit()
+        }
+    })
+
+    mainWindow.on("minimize", (e) => {
+        if (!backend || !backend.config_data) {
+            e.defaultPrevented = false
+            return
+        }
+        let minimize_to_tray = backend.config_data.preference.minimize_to_tray
+        if (minimize_to_tray === null) {
+            mainWindow.webContents.send("confirmMinimizeTray")
+            e.preventDefault()
+        } else if (minimize_to_tray === true) {
+            e.preventDefault()
+            mainWindow.hide()
+        } else {
+            e.defaultPrevented = false
+        }
+    })
+
+    ipcMain.on("confirmMinimizeTray", (e, minimize_to_tray) => {
+        mainWindow.setMinimizable(true)
+        backend.config_data.preference.minimize_to_tray = minimize_to_tray
+        if (minimize_to_tray) {
+            mainWindow.hide()
+        } else {
+            mainWindow.minimize()
         }
     })
 
@@ -136,7 +169,48 @@ app.on("ready", () => {
     if (process.platform === "darwin") {
         const menu = Menu.buildFromTemplate(menuTemplate)
         Menu.setApplicationMenu(menu)
+    } else {
+        tray = new Tray(path.join(__statics, "icon_32x32.png"))
+        const contextMenu = Menu.buildFromTemplate([
+            {
+                label: "Show Ryo Wallet",
+                click: function() {
+                    if(mainWindow.isMinimized())
+                        mainWindow.minimize()
+                    else
+                        mainWindow.show()
+                    mainWindow.focus()
+                }
+            },
+            {
+                label: "Exit Ryo Wallet",
+                click: function() {
+                    if(mainWindow.isMinimized())
+                        mainWindow.minimize()
+                    else
+                        mainWindow.show()
+                    mainWindow.focus()
+                    mainWindow.close()
+                }
+            }
+        ])
+
+        tray.setContextMenu(contextMenu)
+
+        updateTrayInterval = setInterval(() => {
+            if (backend)
+                tray.setToolTip(backend.getTooltipLabel())
+        }, 1000)
+
+        tray.on("click", () => {
+            if(mainWindow.isMinimized())
+                mainWindow.minimize()
+            else
+                mainWindow.show()
+            mainWindow.focus()
+        })
     }
+
     createWindow()
 })
 
@@ -159,6 +233,10 @@ app.on("before-quit", () => {
         forceQuit = true
     } else {
         if (backend) {
+            if (process.platform !== "darwin") {
+                clearInterval(updateTrayInterval)
+                tray.setToolTip("Closing...")
+            }
             backend.quit().then(() => {
                 mainWindow.close()
             })

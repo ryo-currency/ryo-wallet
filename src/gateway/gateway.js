@@ -24,6 +24,7 @@ export class Gateway {
         })
 
         this.closeDialog = false
+        this.minimizeDialog = false
 
         this.app.store.commit("gateway/set_app_data", {
             status: {
@@ -42,6 +43,10 @@ export class Gateway {
 
         ipcRenderer.on("confirmClose", () => {
             this.confirmClose("Are you sure you want to exit?")
+        });
+
+        ipcRenderer.on("confirmMinimizeTray", () => {
+            this.confirmMinimizeTray()
         });
 
     }
@@ -78,6 +83,33 @@ export class Gateway {
             ipcRenderer.send("confirmClose")
         }).catch(() => {
             this.closeDialog = false
+        })
+
+    }
+
+    confirmMinimizeTray() {
+        if(this.minimizeDialog) {
+            return
+        }
+        this.minimizeDialog = true
+        Dialog.create({
+            title: "Minimize to tray?",
+            message: "You can change your preference in the setting menu at any time",
+            ok: {
+                label: "YES"
+            },
+            cancel: {
+                flat: true,
+                label: "NO",
+                color: this.app.store.state.gateway.app.config.appearance.theme=="dark"?"white":"dark"
+            }
+        }).then(() => {
+            this.minimizeDialog = false
+            Loading.hide()
+            ipcRenderer.send("confirmMinimizeTray", true)
+        }).catch(() => {
+            this.minimizeDialog = false
+            ipcRenderer.send("confirmMinimizeTray", false)
         })
 
     }
