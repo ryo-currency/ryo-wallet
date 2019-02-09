@@ -186,7 +186,13 @@ module.exports = function (ctx) {
                     category: "Finance"
                 },
 
+                win: {
+                    target: ["7z", "zip"],
+                    icon: "src-electron/icons/icon.ico"
+                },
+
                 mac: {
+                    target: ["dmg"],
                     icon: "src-electron/icons/icon.icns",
                     category: "public.app-category.finance"
                 },
