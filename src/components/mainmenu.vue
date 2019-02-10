@@ -35,7 +35,7 @@
             <img class="q-mb-md" src="statics/ryo-wallet.svg" height="42" />
 
             <p class="q-my-sm">Version: ATOM v{{version}}-v{{daemonVersion}}</p>
-            <p class="q-my-sm">Copyright (c) 2018, Ryo Currency Project</p>
+            <p class="q-my-sm">Copyright (c) 2019, Ryo Currency Project</p>
             <p class="q-my-sm">All rights reserved.</p>
 
             <div class="q-mt-md q-mb-lg external-links">
