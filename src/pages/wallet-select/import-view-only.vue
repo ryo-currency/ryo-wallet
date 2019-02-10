@@ -50,7 +50,7 @@
                                  />
                     </template>
                 </div>
-                <div class="col-auto">
+                <div class="col-auto self-end">
                     <template v-if="wallet.refresh_type=='date'">
                         <q-btn @click="wallet.refresh_type='height'" class="float-right" :text-color="theme=='dark'?'white':'dark'" flat>
                             <div style="width: 80px;" class="text-center">

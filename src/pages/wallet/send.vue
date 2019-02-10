@@ -67,7 +67,7 @@
             </q-item>
 
             <q-field style="margin-top:0">
-                <q-input v-model="newTx.payment_id" float-label="Payment ID (optional)"
+                <q-input v-model="newTx.payment_id" float-label="Uniform Payment ID (optional)"
                          :dark="theme=='dark'"
                          @blur="$v.newTx.payment_id.$touch"
                          :error="$v.newTx.payment_id.$error"
@@ -79,9 +79,9 @@
                 <div class="col-6">
                     <q-field>
                         <q-select :dark="theme=='dark'"
-                                  v-model="newTx.mixin"
-                                  float-label="Mixin"
-                                  :options="mixinOptions"
+                                  v-model="newTx.ringsize"
+                                  float-label="Ring Size"
+                                  :options="ringsizeOptions"
                                   />
                     </q-field>
                 </div>
@@ -136,6 +136,7 @@ import Identicon from "components/identicon"
 const objectAssignDeep = require("object-assign-deep");
 export default {
     computed: mapState({
+        notify_no_payment_id: state => state.gateway.app.config.preference.notify_no_payment_id,
         theme: state => state.gateway.app.config.appearance.theme,
         view_only: state => state.gateway.wallet.info.view_only,
         unlocked_balance: state => state.gateway.wallet.info.unlocked_balance,
@@ -154,7 +155,7 @@ export default {
                 amount: 0,
                 address: "",
                 payment_id: "",
-                mixin: 12,
+                ringsize: 25,
                 priority: 0,
                 address_book: {
                     save: false,
@@ -162,10 +163,9 @@ export default {
                     description: ""
                 }
             },
-            mixinOptions: [
-                {label: "12 mixins (default)", value: 12},
-                {label: "48 mixins (top secret)", value: 48},
-                {label: "96 mixins (paranoid)", value: 60},
+            ringsizeOptions: [
+                {label: "25 ring members (default)", value: 25},
+                {label: "100 ring members (top secret)", value: 100},
             ],
             priorityOptions: [
                 {label: "Normal (x1 fee)", value: 0},
@@ -202,7 +202,7 @@ export default {
                             amount: 0,
                             address: "",
                             payment_id: "",
-                            mixin: 12,
+                            ringsize: 25,
                             priority: 0,
                             address_book: {
                                 save: false,
@@ -293,31 +293,97 @@ export default {
                 return
             }
 
-            this.$q.dialog({
-                title: "Transfer",
-                message: "Enter wallet password to continue.",
-                prompt: {
-                    model: "",
-                    type: "password"
-                },
-                ok: {
-                    label: "SEND"
-                },
-                cancel: {
-                    flat: true,
-                    label: "CANCEL",
-                    color: this.theme=="dark"?"white":"dark"
-                }
-            }).then(password => {
-                this.$store.commit("gateway/set_tx_status", {
-                    code: 1,
-                    message: "Sending transaction",
-                    sending: true
+            this.warnPaymentId()
+                .then(options => {
+                    if(options.length > 0 && options[0] === true) {
+                        // user selected do not show again
+                        this.$gateway.send("core", "quick_save_config", {
+                            preference: {
+                                notify_no_payment_id: false
+                            }
+                        })
+                    }
+
+                    this.$q.dialog({
+                        title: "Transfer",
+                        message: "Enter wallet password to continue.",
+                        prompt: {
+                            model: "",
+                            type: "password"
+                        },
+                        ok: {
+                            label: "SEND"
+                        },
+                        cancel: {
+                            flat: true,
+                            label: "CANCEL",
+                            color: this.theme=="dark"?"white":"dark"
+                        }
+                    }).then(password => {
+                        this.$store.commit("gateway/set_tx_status", {
+                            code: 1,
+                            message: "Sending transaction",
+                            sending: true
+                        })
+                        let newTx = objectAssignDeep.noMutate(this.newTx, {password})
+                        this.$gateway.send("wallet", "transfer", newTx)
+                    }).catch(() => {
+                    })
+
+                }).catch(() => {
                 })
-                let newTx = objectAssignDeep.noMutate(this.newTx, {password})
-                this.$gateway.send("wallet", "transfer", newTx)
-            }).catch(() => {
-            })
+        },
+
+        warnPaymentId: function () {
+            let has_payment_id = false
+            if(this.newTx.payment_id != "") {
+                has_payment_id = true
+            } else {
+                switch(this.newTx.address.substring(0, 4)) {
+                    case "RYoN":
+                    case "Sumi":
+                    case "RYoE":
+                    case "Suti":
+                        has_payment_id = true
+                        break
+                }
+            }
+
+            let is_subaddress = false
+            switch(this.newTx.address.substring(0, 4)) {
+                case "RYoS":
+                case "Subo":
+                case "RYoU":
+                case "Susu":
+                    is_subaddress = true
+                    break
+            }
+
+            if(this.notify_no_payment_id && !has_payment_id && !is_subaddress) {
+                return this.$q.dialog({
+                    title: "Transfer",
+                    message: "No Payment ID provided. If you are sending to an exchange your funds may be lost.",
+                    options: {
+                        type: "checkbox",
+                        model: [],
+                        items: [
+                            {label: "Do not show this message again", value: true},
+                        ]
+                    },
+                    ok: {
+                        label: "CONTINUE"
+                    },
+                    cancel: {
+                        flat: true,
+                        label: "CANCEL",
+                        color: this.theme=="dark"?"white":"dark"
+                    }
+                })
+            } else {
+                return new Promise((resolve, reject) => {
+                    resolve([])
+                })
+            }
         }
     },
     components: {

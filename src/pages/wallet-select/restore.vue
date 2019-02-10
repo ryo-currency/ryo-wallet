@@ -41,7 +41,7 @@
                                  />
                     </template>
                 </div>
-                <div class="col-auto">
+                <div class="col-auto self-end">
                     <template v-if="wallet.refresh_type=='date'">
                         <q-btn @click="wallet.refresh_type='height'" class="float-right" :text-color="theme=='dark'?'white':'dark'" flat>
                             <div style="width: 80px;" class="text-center">
@@ -96,6 +96,7 @@ export default {
         }
     },
     computed: mapState({
+        notify_empty_password: state => state.gateway.app.config.preference.notify_empty_password,
         theme: state => state.gateway.app.config.appearance.theme,
         status: state => state.gateway.wallet.status,
     }),
@@ -178,14 +179,55 @@ export default {
                 return
             }
 
-            this.$q.loading.show({
-                delay: 0
-            })
+            this.warnEmptyPassword()
+                .then(options => {
+                    if(options.length > 0 && options[0] === true) {
+                        // user selected do not show again
+                        this.$gateway.send("core", "quick_save_config", {
+                            preference: {
+                                notify_empty_password: false
+                            }
+                        })
+                    }
 
-            this.$gateway.send("wallet", "restore_wallet", this.wallet);
+                    this.$q.loading.show({
+                        delay: 0
+                    })
+
+                    this.$gateway.send("wallet", "restore_wallet", this.wallet);
+
+                }).catch(() => {
+                })
         },
         cancel() {
             this.$router.replace({ path: "/wallet-select" });
+        },
+        warnEmptyPassword: function () {
+            if(this.notify_empty_password && this.wallet.password == "") {
+                return this.$q.dialog({
+                    title: "Warning",
+                    message: "Using an empty password will leave your wallet unencrypted on your file system!",
+                    options: {
+                        type: "checkbox",
+                        model: [],
+                        items: [
+                            {label: "Do not show this message again", value: true},
+                        ]
+                    },
+                    ok: {
+                        label: "CONTINUE"
+                    },
+                    cancel: {
+                        flat: true,
+                        label: "CANCEL",
+                        color: this.theme=="dark"?"white":"dark"
+                    }
+                })
+            } else {
+                return new Promise((resolve, reject) => {
+                    resolve([])
+                })
+            }
         }
     }
 }

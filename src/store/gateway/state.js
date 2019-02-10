@@ -6,6 +6,10 @@ export default {
         config: {
             appearance: {
                 theme: "light"
+            },
+            preference: {
+                notify_no_payment_id: true,
+                notify_empty_password: true
             }
         },
         pending_config: {

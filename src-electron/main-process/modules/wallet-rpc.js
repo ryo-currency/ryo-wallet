@@ -23,6 +23,9 @@ export class WalletRPC {
             balance: null,
             unlocked_balance: null
         }
+        this.wallet_info = {
+            height: 0
+        }
 
         this.last_height_send_time = Date.now()
 
@@ -83,9 +86,6 @@ export class WalletRPC {
 
                 if (fs.existsSync(log_file))
                     fs.truncateSync(log_file, 0)
-
-                if (!fs.existsSync(this.wallet_dir))
-                    fs.mkdirSync(this.wallet_dir)
 
                 if (process.platform === "win32") {
                     this.walletRPCProcess = child_process.spawn(path.join(__ryo_bin, "ryo-wallet-rpc.exe"), args)
@@ -192,7 +192,7 @@ export class WalletRPC {
                 break
 
             case "transfer":
-                this.transfer(params.password, params.amount, params.address, params.payment_id, params.mixin, params.priority, params.address_book)
+                this.transfer(params.password, params.amount, params.address, params.payment_id, params.ringsize, params.priority, params.address_book)
                 break
 
             case "add_address_book":
@@ -580,6 +580,9 @@ export class WalletRPC {
                             height: n.result.height
                         }
                     })
+                    this.wallet_info = {
+                        height: n.result.height
+                    }
 
                 } else if(n.method == "getbalance") {
                     if(this.wallet_state.balance == n.result.balance &&
@@ -615,7 +618,7 @@ export class WalletRPC {
 
     }
 
-    transfer (password, amount, address, payment_id, mixin, priority, address_book={}) {
+    transfer (password, amount, address, payment_id, ringsize, priority, address_book={}) {
 
         crypto.pbkdf2(password, this.auth[2], 1000, 64, "sha512", (err, password_hash) => {
             if (err) {
@@ -645,7 +648,7 @@ export class WalletRPC {
                     "address": address,
                     "account_index": 0,
                     "priority": priority,
-                    "mixin": mixin
+                    "mixin": ringsize-1
                 }
 
                 if(payment_id) {
@@ -676,7 +679,7 @@ export class WalletRPC {
                 let params = {
                     "destinations": [{"amount" : amount, "address": address}],
                     "priority": priority,
-                    "mixin": mixin
+                    "mixin": ringsize-1
                 }
 
                 if(payment_id) {
@@ -1209,6 +1212,9 @@ export class WalletRPC {
                 password_hash: null,
                 balance: null,
                 unlocked_balance: null
+            }
+            this.wallet_info = {
+                height: 0
             }
 
             this.saveWallet().then(() => {

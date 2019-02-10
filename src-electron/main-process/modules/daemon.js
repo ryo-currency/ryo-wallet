@@ -14,6 +14,8 @@ export class Daemon {
         this.testnet = false
         this.local = false // do we have a local daemon ?
 
+        this.daemon_info = {}
+
         this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
         this.queue = new queue(1, Infinity)
 
@@ -46,6 +48,26 @@ export class Daemon {
         })
     }
 
+    checkRemoteDaemon(options) {
+        if(options.daemon.type == "local") {
+            return new Promise((resolve, reject) => {
+                resolve({
+                    result: {
+                        mainnet: !options.app.testnet,
+                        testnet: options.app.testnet,
+                    }
+                })
+            })
+        } else {
+            let uri = `http://${options.daemon.remote_host}:${options.daemon.remote_port}/json_rpc`
+            return new Promise((resolve, reject) => {
+                this.sendRPC("get_info", {}, uri).then((data) => {
+                    resolve(data)
+                })
+            })
+        }
+    }
+
     start(options) {
 
         if(options.daemon.type === "remote") {
@@ -74,8 +96,6 @@ export class Daemon {
 
             const args = [
                 "--data-dir", options.app.data_dir,
-                "--p2p-bind-ip", options.daemon.p2p_bind_ip,
-                "--p2p-bind-port", options.daemon.p2p_bind_port,
                 "--rpc-bind-ip", options.daemon.rpc_bind_ip,
                 "--rpc-bind-port", options.daemon.rpc_bind_port,
                 "--zmq-rpc-bind-ip", options.daemon.zmq_rpc_bind_ip,
@@ -86,6 +106,20 @@ export class Daemon {
                 "--limit-rate-down", options.daemon.limit_rate_down,
                 "--log-level", options.daemon.log_level,
             ];
+
+            if(options.daemon.enhanced_ip_privacy) {
+                args.push(
+                    "--p2p-bind-ip", "127.0.0.1",
+                    "--p2p-bind-port", options.daemon.p2p_bind_port,
+                    "--no-igd",
+                    "--hide-my-port"
+                )
+            } else {
+                args.push(
+                    "--p2p-bind-ip", options.daemon.p2p_bind_ip,
+                    "--p2p-bind-port", options.daemon.p2p_bind_port
+                )
+            }
 
             if(options.app.testnet) {
                 this.testnet = true
@@ -302,6 +336,7 @@ export class Daemon {
                     daemon_info.info = n.result
                 }
             }
+            this.daemon_info = daemon_info.info
             this.sendGateway("set_daemon_data", daemon_info)
         })
     }
@@ -344,10 +379,10 @@ export class Daemon {
         this.backend.send(method, data)
     }
 
-    sendRPC(method, params={}) {
+    sendRPC(method, params={}, uri=false) {
         let id = this.id++
         let options = {
-            uri: `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
+            uri: uri ? uri : `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
             method: "POST",
             json: {
                 jsonrpc: "2.0",

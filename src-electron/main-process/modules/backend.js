@@ -29,6 +29,7 @@ export class Backend {
         } else {
             this.config_dir = path.join(os.homedir(), ".ryo");
         }
+
         if (!fs.existsSync(this.config_dir)) {
             fs.mkdirSync(this.config_dir);
         }
@@ -50,6 +51,11 @@ export class Backend {
             appearance: {
                 theme: "light"
             },
+            preference: {
+                notify_no_payment_id: true,
+                notify_empty_password: true,
+                minimize_to_tray: false
+            },
 
             daemon: {
                 type: "local_remote",
@@ -61,11 +67,12 @@ export class Backend {
                 rpc_bind_port: 12211,
                 zmq_rpc_bind_ip: "127.0.0.1",
                 zmq_rpc_bind_port: 12212,
-                out_peers: -1,
-                in_peers: -1,
+                out_peers: 8,
+                in_peers: 0,
                 limit_rate_up: -1,
                 limit_rate_down: -1,
-                log_level: 0
+                log_level: 0,
+                enhanced_ip_privacy: true
             },
 
             wallet: {
@@ -229,16 +236,43 @@ export class Backend {
                 this.config_data[key] = Object.assign(this.config_data[key], disk_config_data[key])
             });
 
+            // If not Windows or Mac OS, and minimize to tray preference not set, force to false
+            // Else if is Windows or Mac OS, and minimize to tray preference not set, prevent minimize
+            if(this.config_data.preference.minimize_to_tray === null) {
+                if(os.platform() !== "win32" && os.platform() !== "darwin") {
+                    this.config_data.preference.minimize_to_tray = false
+                } else {
+                    this.mainWindow.setMinimizable(false)
+                }
+            }
+
             // here we may want to check if config data is valid, if not also send code -1
             // i.e. check ports are integers and > 1024, check that data dir path exists, etc
 
             // save config file back to file, so updated options are stored on disk
-            fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), 'utf8');
+            fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8", () => {});
 
             this.send("set_app_data", {
                 config: this.config_data,
                 pending_config: this.config_data,
             });
+
+            // Check to see if data dir exists, if not it may have been on network drive
+            // if not exist, send back to config screen with message so user can select
+            // new location
+            if (!fs.existsSync(this.config_data.app.data_dir)) {
+                this.send("show_notification", {type: "negative", message: "Error: data storge path not found", timeout: 2000})
+                this.send("set_app_data", {
+                    status: {
+                        code: -1 // Return to config screen
+                    }
+                });
+                return;
+            }
+
+            let lmdb_dir = path.join(this.config_data.app.data_dir, "lmdb02")
+            let log_dir = path.join(this.config_data.app.data_dir, "logs")
+            let wallet_dir = path.join(this.config_data.app.data_dir, "wallets")
 
             if(this.config_data.app.testnet) {
 
@@ -246,16 +280,35 @@ export class Backend {
                 if (!fs.existsSync(testnet_dir))
                     fs.mkdirSync(testnet_dir);
 
-                let log_dir = path.join(this.config_data.app.data_dir, "testnet", "logs")
-                if (!fs.existsSync(log_dir))
-                    fs.mkdirSync(log_dir);
+                lmdb_dir = path.join(testnet_dir, "lmdb02")
+                log_dir = path.join(testnet_dir, "logs")
+                wallet_dir = path.join(testnet_dir, "wallets")
 
-            } else {
+            }
 
-                let log_dir = path.join(this.config_data.app.data_dir, "logs")
-                if (!fs.existsSync(log_dir))
-                    fs.mkdirSync(log_dir);
+            if (!fs.existsSync(lmdb_dir))
+                fs.mkdirSync(lmdb_dir);
+            if (!fs.existsSync(log_dir))
+                fs.mkdirSync(log_dir);
+            if (!fs.existsSync(wallet_dir))
+                fs.mkdirSync(wallet_dir)
 
+            // Check permissions
+            try {
+                fs.accessSync(this.config_dir, fs.constants.R_OK | fs.constants.W_OK);
+                fs.accessSync(path.join(this.config_dir, "gui"), fs.constants.R_OK | fs.constants.W_OK);
+                fs.accessSync(this.config_file, fs.constants.R_OK | fs.constants.W_OK);
+                fs.accessSync(lmdb_dir, fs.constants.R_OK | fs.constants.W_OK);
+                fs.accessSync(log_dir, fs.constants.R_OK | fs.constants.W_OK);
+                fs.accessSync(wallet_dir, fs.constants.R_OK | fs.constants.W_OK);
+            } catch (err) {
+                this.send("show_notification", {type: "negative", message: "Error: data storge path not writable", timeout: 2000})
+                this.send("set_app_data", {
+                    status: {
+                        code: -1 // Return to config screen
+                    }
+                });
+                return;
             }
 
             this.daemon = new Daemon(this);
@@ -280,39 +333,98 @@ export class Backend {
                     // daemon not found, probably removed by AV, set to remote node
                     this.config_data.daemon.type = "remote"
                     this.send("set_app_data", {
-                        status: {
-                            code: 5
-                        },
                         config: this.config_data,
                         pending_config: this.config_data,
                     });
-
+                    this.send("show_notification", {type: "warning", textColor: "black", message: "Warning: ryod not found, using remote node", timeout: 2000})
                 }
 
-                this.daemon.start(this.config_data).then(() => {
 
-                    this.send("set_app_data", {
-                        status: {
-                            code: 6 // Starting wallet
+                this.daemon.checkRemoteDaemon(this.config_data).then((data) => {
+
+                    if(data.hasOwnProperty("error")) {
+                        // error contacting remote daemon
+
+                        if(this.config_data.daemon.type == "local_remote") {
+                            // if in local+remote, then switch to local only
+                            this.config_data.daemon.type = "local"
+                            this.send("set_app_data", {
+                                config: this.config_data,
+                                pending_config: this.config_data,
+                            });
+                            this.send("show_notification", {type: "warning", textColor: "black", message: "Warning: remote node not available, using local node", timeout: 2000})
+
+                        } else if(this.config_data.daemon.type == "remote") {
+                            this.send("set_app_data", {
+                                status: {
+                                    code: -1 // Return to config screen
+                                }
+                            });
+                            this.send("show_notification", {type: "negative", message: "Error: remote node not available, change to local mode or update remote node", timeout: 2000})
+                            return;
                         }
-                    });
+                    } else if(this.config_data.app.testnet && !data.result.testnet) {
+                        // remote node network does not match local network (testnet, mainnet)
 
-                    this.walletd.start(this.config_data).then(() => {
+                        if(this.config_data.daemon.type == "local_remote") {
+                            // if in local+remote, then switch to local only
+                            this.config_data.daemon.type = "local"
+                            this.send("set_app_data", {
+                                config: this.config_data,
+                                pending_config: this.config_data,
+                            });
+                            this.send("show_notification", {type: "warning", textColor: "black", message: "Warning: remote node network does not match, using local node", timeout: 2000})
+
+                        } else if(this.config_data.daemon.type == "remote") {
+                            this.send("set_app_data", {
+                                status: {
+                                    code: -1 // Return to config screen
+                                }
+                            });
+                            this.send("show_notification", {type: "negative", message: "Error: remote node network does not match, change to local mode or update remote node", timeout: 2000})
+                            return;
+                        }
+
+                    }
+
+                    this.daemon.start(this.config_data).then(() => {
 
                         this.send("set_app_data", {
                             status: {
-                                code: 7 // Reading wallet list
+                                code: 6 // Starting wallet
                             }
                         });
 
-                        this.walletd.listWallets(true)
+                        this.walletd.start(this.config_data).then(() => {
 
-                        this.send("set_app_data", {
-                            status: {
-                                code: 0 // Ready
-                            }
+                            this.send("set_app_data", {
+                                status: {
+                                    code: 7 // Reading wallet list
+                                }
+                            });
+
+                            this.walletd.listWallets(true)
+
+                            this.send("set_app_data", {
+                                status: {
+                                    code: 0 // Ready
+                                }
+                            });
+                        }).catch(error => {
+                            this.send("set_app_data", {
+                                status: {
+                                    code: -1 // Return to config screen
+                                }
+                            });
+                            return;
                         });
+
                     }).catch(error => {
+                        if(this.config_data.daemon.type == "remote") {
+                            this.send("show_notification", {type: "negative", message: "Remote daemon cannot be reached", timeout: 2000})
+                        } else {
+                            this.send("show_notification", {type: "negative", message: "Local daemon internal error", timeout: 2000})
+                        }
                         this.send("set_app_data", {
                             status: {
                                 code: -1 // Return to config screen
@@ -320,19 +432,6 @@ export class Backend {
                         });
                         return;
                     });
-
-                }).catch(error => {
-                    if(this.config_data.daemon.type == "remote") {
-                        this.send("show_notification", {type: "negative", message: "Remote daemon cannot be reached", timeout: 2000})
-                    } else {
-                        this.send("show_notification", {type: "negative", message: "Local daemon internal error", timeout: 2000})
-                    }
-                    this.send("set_app_data", {
-                        status: {
-                            code: -1 // Return to config screen
-                        }
-                    });
-                    return;
                 });
 
             }).catch(error => {
@@ -345,6 +444,77 @@ export class Backend {
             });
 
         });
+    }
+
+    getTooltipLabel () {
+
+        if(!this.daemon || !this.walletd)
+            return "Initializing..."
+
+        let daemon_type = this.config_data.daemon.type
+        let daemon_info = this.daemon.daemon_info
+        let wallet_info = this.walletd.wallet_info
+
+        if(Object.keys(daemon_info).length == 0 || Object.keys(wallet_info).length == 0)
+            return "Initializing..."
+
+        let target_height = 0
+        if(daemon_type === "local" && !daemon_info.is_ready)
+            target_height = Math.max(daemon_info.height, daemon_info.target_height)
+        else
+            target_height = daemon_info.height
+
+        let daemon_local_pct = 0
+        if(daemon_type !== "remote") {
+            let d_pct = (100 * daemon_info.height_without_bootstrap / target_height).toFixed(1)
+            if(d_pct == 100.0 && daemon_info.height_without_bootstrap < target_height)
+                daemon_local_pct = 99.9
+            else
+                daemon_local_pct = d_pct
+        }
+
+        let daemon_pct = 0
+        if(daemon_type === "local")
+            daemon_pct = daemon_local_pct
+
+        let wallet_pct  = 0
+        let w_pct = (100 * wallet_info.height / target_height).toFixed(1)
+        if(w_pct == 100.0 && wallet_info.height < target_height)
+            wallet_pct = 99.9
+        else
+            wallet_pct = w_pct
+
+        let status = ""
+
+        if(daemon_type !== "remote") {
+            status += `Daemon: ${daemon_info.height_without_bootstrap} / ${target_height} (${daemon_local_pct}%) `
+        }
+
+        if(daemon_type !== "local") {
+            status += `Remote: ${daemon_info.height} `
+        }
+
+        status += `Wallet: ${wallet_info.height} / ${target_height} (${wallet_pct}%) `
+
+        if(daemon_type === "local") {
+            if(daemon_info.height_without_bootstrap < target_height || !daemon_info.is_ready) {
+                status += "Syncing..."
+            } else if(wallet_info.height < target_height - 1 && wallet_info.height != 0) {
+                status += "Scanning..."
+            } else {
+                status += "Ready"
+            }
+        } else {
+            if(wallet_info.height < target_height - 1 && wallet_info.height != 0) {
+                status += "Scanning..."
+            } else if(daemon_info.height_without_bootstrap < target_height) {
+                status += "Syncing..."
+            } else {
+                status += "Ready"
+            }
+        }
+
+        return status
     }
 
     quit() {

@@ -1,7 +1,12 @@
 <template>
 <q-page>
 
-    <q-stepper class="no-shadow" ref="stepper" :color="theme == 'dark' ? 'light' : 'dark'" dark>
+    <q-stepper
+        class="no-shadow"
+        ref="stepper"
+        :color="theme == 'dark' ? 'light' : 'dark'"
+        dark
+        :active-icon="false" >
 
         <q-step default title="Welcome">
 
@@ -30,6 +35,8 @@
 
             <q-btn-toggle
                 v-model="choose_theme"
+                :color="theme=='dark'?'dark':'standard'"
+                :text-color="theme=='dark'?'white':'dark'"
                 toggle-color="primary"
                 size="md"
                 :options="[
@@ -43,6 +50,8 @@
 
             <q-btn-toggle
                 v-model="choose_lang"
+                :color="theme=='dark'?'dark':'standard'"
+                :text-color="theme=='dark'?'white':'dark'"
                 toggle-color="primary"
                 size="md"
                 :options="[
@@ -93,7 +102,8 @@
         <div class="row justify-end">
             <div>
 	        <q-btn
-	            flat
+                    :color="theme=='dark'?'dark':'white'"
+                    :text-color="theme=='dark'?'white':'dark'"
 	            @click="clickPrev()"
 	            label="Back"
 	            />
@@ -134,6 +144,11 @@ export default {
         choose_theme: function (val) {
             this.$store.commit("gateway/set_app_data", {
                 config: {
+                    appearance: {
+                        theme: val
+                    }
+                },
+                pending_config: {
                     appearance: {
                         theme: val
                     }
@@ -194,13 +209,44 @@ export default {
     }
 }
 
-.q-stepper-header {
-    min-height: 50px;
+.q-stepper {
 
-    .q-stepper-tab {
-        padding-top: 0;
-        padding-bottom: 0;
+    .q-stepper-header {
+        min-height: 50px;
+
+        .q-stepper-tab {
+            padding-top: 0;
+            padding-bottom: 0;
+
+        }
+
+    }
+
+    .q-stepper-step {
+        .q-stepper-step-content {
+            animation: none;
+        }
     }
 
 }
+
+.q-stepper.text-light {
+    .q-stepper-dot {
+        background-color: #333;
+    }
+}
+
+.q-stepper.text-dark {
+    .q-stepper-dot {
+        background-color: #aaa;
+    }
+}
+
+.q-stepper-tab.step-active {
+    .q-stepper-dot {
+        background-color: #497dc6;
+    }
+}
+
+
 </style>
