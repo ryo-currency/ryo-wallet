@@ -27,6 +27,8 @@ export class WalletRPC {
             height: 0
         }
 
+        this.wallet_list = []
+
         this.last_height_send_time = Date.now()
 
         this.height_regex1 = /Processed block: <([a-f0-9]+)>, height (\d+)/
@@ -102,7 +104,7 @@ export class WalletRPC {
 
                 this.walletRPCProcess.stdout.on("data", (data) => {
 
-                    process.stdout.write(`Wallet: ${data}`)
+                    //process.stdout.write(`Wallet: ${data}`)
 
                     let lines = data.toString().split("\n");
                     let match, height = null
@@ -146,7 +148,7 @@ export class WalletRPC {
                                 // Ignore
                             } else {
                                 clearInterval(intrvl)
-                                reject(error)
+                                reject(data.error)
                             }
                         }
                     })
@@ -894,6 +896,9 @@ export class WalletRPC {
                     if(a.timestamp > b.timestamp) return -1
                     return 0
                 })
+
+                //console.log(wallet.transactions)
+
                 resolve(wallet)
             })
         })
@@ -1142,6 +1147,8 @@ export class WalletRPC {
             }
         }
 
+        this.wallet_list = wallets.list
+
         this.sendGateway("wallet_list", wallets)
 
     }
@@ -1292,6 +1299,7 @@ export class WalletRPC {
     }
 
     quit() {
+        this.queue.queue = []
         return new Promise((resolve, reject) => {
             if (this.walletRPCProcess) {
                 this.closeWallet().then(() => {

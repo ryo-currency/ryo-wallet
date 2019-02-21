@@ -125,6 +125,7 @@ export class Daemon {
                 this.testnet = true
                 args.push("--testnet")
                 args.push("--log-file", path.join(options.app.data_dir, "testnet", "logs", "ryod.log"))
+                args.push("--add-peer", "45.77.68.151:13310")
             } else {
                 args.push("--log-file", path.join(options.app.data_dir, "logs", "ryod.log"))
             }
@@ -152,7 +153,9 @@ export class Daemon {
             this.hostname = options.daemon.rpc_bind_ip
             this.port = options.daemon.rpc_bind_port
 
-            this.daemonProcess.stdout.on("data", data => process.stdout.write(`Daemon: ${data}`))
+            this.daemonProcess.stdout.on("data", data => {
+                //process.stdout.write(`Daemon: ${data}`)
+            })
             this.daemonProcess.on("error", err => process.stderr.write(`Daemon: ${err}`))
             this.daemonProcess.on("close", code => process.stderr.write(`Daemon: exited with code ${code}`))
 
@@ -391,10 +394,9 @@ export class Daemon {
             },
             agent: this.agent
         };
-        if(Object.keys(params).length !== 0) {
-            options.json.params = params;
+        if(Array.isArray(params) || Object.keys(params).length !== 0) {
+            options.json.params = params
         }
-
         return this.queue.add(() => {
             return request(options)
                 .then((response) => {
@@ -432,7 +434,9 @@ export class Daemon {
     }
 
     quit() {
+        // TODO force close after few seconds!
         clearInterval(this.heartbeat);
+        this.queue.queue = []
         return new Promise((resolve, reject) => {
             if (this.daemonProcess) {
                 this.daemonProcess.on("close", code => {

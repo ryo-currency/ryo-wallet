@@ -13,7 +13,17 @@ export default {
             }
         },
         pending_config: {
-        }
+        },
+        network_interfaces: [
+            {
+                address: "0.0.0.0",
+                label: "All interfaces - 0.0.0.0"
+            },
+            {
+                address: "127.0.0.1",
+                label: "Local machine only - 127.0.0.1"
+            }
+        ]
     },
     wallets: {
         list: [],
@@ -73,5 +83,12 @@ export default {
         connections: [],
         bans: [],
         tx_pool_backlog: []
+    },
+    pool: {
+        stats: {
+            currentEffort: 0
+        },
+        blocks: [],
+        workers: []
     }
 }

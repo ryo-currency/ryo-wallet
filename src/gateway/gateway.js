@@ -23,6 +23,20 @@ export class Gateway {
             LocalStorage.set("theme", theme)
         })
 
+        let numBlocks = null
+        this.app.store.watch( state => state.gateway.pool.blocks, (blocks) => {
+            if(numBlocks != null && blocks.length != numBlocks) {
+                const block = blocks[0]
+                const effort = Math.round(100 * block.hashes / block.diff)
+                Notify.create({
+                    type: "positive",
+                    timeout: 2000,
+                    message: `Block found at height ${block.height} with ${effort}% effort`
+                })
+            }
+            numBlocks = blocks.length
+        })
+
         this.closeDialog = false
         this.minimizeDialog = false
 
@@ -144,6 +158,10 @@ export class Gateway {
 
             case "set_daemon_data":
                 this.app.store.commit("gateway/set_daemon_data", decrypted_data.data)
+                break
+
+            case "set_pool_data":
+                this.app.store.commit("gateway/set_pool_data", decrypted_data.data)
                 break
 
             case "set_wallet_data":
