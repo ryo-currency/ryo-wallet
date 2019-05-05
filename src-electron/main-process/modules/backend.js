@@ -1,5 +1,6 @@
 import { Daemon } from "./daemon";
 import { WalletRPC } from "./wallet-rpc";
+import { Pool } from "./pool";
 import { SCEE } from "./SCEE-Node";
 import { dialog } from "electron";
 
@@ -13,6 +14,7 @@ export class Backend {
         this.mainWindow = mainWindow
         this.daemon = null
         this.walletd = null
+        this.pool = null
         this.wss = null
         this.token = null
         this.config_dir = null
@@ -78,7 +80,33 @@ export class Backend {
             wallet: {
                 rpc_bind_port: 12214,
                 log_level: 0
+            },
+
+            pool: {
+                server: {
+                    enabled: false,
+                    bindIP: "0.0.0.0",
+                    bindPort: 3333,
+                },
+                mining: {
+                    address: "",
+                    blockRefreshInterval: 5,
+                    minerTimeout: 900,
+                    uniform: true,
+                },
+                varDiff: {
+                    enabled: true,
+                    startDiff: 5000,
+                    minDiff: 1000,
+                    maxDiff: 100000000,
+                    targetTime: 60,
+                    retargetTime: 30,
+                    variancePercent: 30,
+                    maxJump: 100,
+                    fixedDiffSeparator: ".",
+                },
             }
+
         }
 
         this.token = config.token
@@ -153,13 +181,14 @@ export class Backend {
                 // check if config has changed
                 let config_changed = false
                 Object.keys(this.config_data).map(i => {
-                    if(i == "appearance") return
+                    if(i == "appearance" || i == "pool") return
                     Object.keys(this.config_data[i]).map(j => {
                         if(this.config_data[i][j] !== params[i][j])
                             config_changed = true
                     })
                 })
             case "save_config_init":
+                delete params.pool
                 Object.keys(params).map(key => {
                     this.config_data[key] = Object.assign(this.config_data[key], params[key])
                 });
@@ -182,9 +211,28 @@ export class Backend {
                 this.startup();
                 break;
 
+            case "save_pool_config":
+                Object.keys(params).map(key => {
+                    this.config_data.pool[key] = Object.assign(this.config_data.pool[key], params[key])
+                })
+                fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), 'utf8', () => {
+                    this.send("set_app_data", {
+                        config: this.config_data
+                    })
+                    this.pool.init(this.config_data)
+                })
+                break
+
+
             case "open_explorer":
+                let explorer_url = "https://explorer.ryo-currency.com"
+                if(this.config_data.app.testnet) {
+                    explorer_url = "https://tnexp.ryoblocks.com"
+                }
                 if(params.type == "tx") {
-                    require("electron").shell.openExternal("https://explorer.ryo-currency.com/tx/"+params.id)
+                    require("electron").shell.openExternal(`${explorer_url}/tx/${params.id}`)
+                } else if(params.type == "block") {
+                    require("electron").shell.openExternal(`${explorer_url}/block/${params.id}`)
                 }
                 break;
 
@@ -215,7 +263,7 @@ export class Backend {
     }
 
     startup() {
-        fs.readFile(this.config_file, "utf8", (err,data) => {
+        fs.readFile(this.config_file, "utf8", (err, data) => {
             if (err) {
                 this.send("set_app_data", {
                     status: {
@@ -227,7 +275,11 @@ export class Backend {
                 return;
             }
 
-            let disk_config_data = JSON.parse(data);
+            let disk_config_data = {}
+            try {
+                disk_config_data = JSON.parse(data)
+            } catch(e) {
+            }
 
             // semi-shallow object merge
             Object.keys(disk_config_data).map(key => {
@@ -252,9 +304,35 @@ export class Backend {
             // save config file back to file, so updated options are stored on disk
             fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8", () => {});
 
+
+            // get network interfaces for UI
+            const interfaces = os.networkInterfaces()
+            let network_interfaces = [{
+                value: "0.0.0.0",
+                label: "All interfaces - 0.0.0.0"
+            }]
+            for(let k in interfaces) {
+                for(let k2 in interfaces[k]) {
+                    const address = interfaces[k][k2]
+                    if(address.family === "IPv4" && address.internal) {
+                        network_interfaces.push({
+                            value: address.address,
+                            label: `Local machine only - ${address.address}`
+                        })
+                    } else if(address.family === "IPv4" && !address.internal) {
+                        network_interfaces.push({
+                            value: address.address,
+                            label: `Local network only - ${address.address}`
+                        })
+                    }
+                }
+            }
+
+
             this.send("set_app_data", {
                 config: this.config_data,
                 pending_config: this.config_data,
+                network_interfaces: network_interfaces
             });
 
             // Check to see if data dir exists, if not it may have been on network drive
@@ -313,6 +391,7 @@ export class Backend {
 
             this.daemon = new Daemon(this);
             this.walletd = new WalletRPC(this);
+            this.pool = new Pool(this);
 
             this.send("set_app_data", {
                 status: {
@@ -404,6 +483,8 @@ export class Backend {
                             });
 
                             this.walletd.listWallets(true)
+
+                            this.pool.init(this.config_data)
 
                             this.send("set_app_data", {
                                 status: {
@@ -524,6 +605,8 @@ export class Backend {
                 process.push(this.daemon.quit())
             if(this.walletd)
                 process.push(this.walletd.quit())
+            if(this.pool)
+                process.push(this.pool.quit())
             if(this.wss)
                 this.wss.close();
 

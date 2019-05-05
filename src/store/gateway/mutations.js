@@ -6,6 +6,9 @@ export const set_app_data = (state, data) => {
 export const set_daemon_data = (state, data) => {
     state.daemon = objectAssignDeep.noMutate(state.daemon, data)
 }
+export const set_pool_data = (state, data) => {
+    state.pool = objectAssignDeep.noMutate(state.pool, data)
+}
 export const set_wallet_data = (state, data) => {
     state.wallet = objectAssignDeep.noMutate(state.wallet, data)
 }

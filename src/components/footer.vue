@@ -12,6 +12,21 @@
 
         <div>Wallet: {{ wallet.info.height }} / {{ target_height }} ({{ wallet_pct }}%)</div>
 
+        <template v-if="config.pool.server.enabled">
+            <template v-if="pool.status == -1">
+                <div>Solo Mining: Error</div>
+            </template>
+            <template v-if="pool.status == 0">
+                <div>Solo Mining: Inactive</div>
+            </template>
+            <template v-if="pool.status == 1">
+                <div>Solo Mining: Waiting for daemon...</div>
+            </template>
+            <template v-if="pool.status == 2">
+                <div>Solo Mining: {{ pool.stats.h.hashrate_5min | hashrate }}</div>
+            </template>
+        </template>
+
         <div>{{ status }}</div>
 
     </div>
@@ -31,6 +46,7 @@ export default {
         config: state => state.gateway.app.config,
         daemon: state => state.gateway.daemon,
         wallet: state => state.gateway.wallet,
+        pool: state => state.gateway.pool,
 
         target_height (state) {
             if(this.config.daemon.type === "local" && !this.daemon.info.is_ready)
@@ -81,6 +97,20 @@ export default {
         }
 
     }),
+    filters: {
+        hashrate: (hashrate) => {
+            if(!hashrate) hashrate = 0
+            const byteUnits = [" H/s", " kH/s", " MH/s", " GH/s", " TH/s", " PH/s"]
+            let i = 0
+            if(hashrate > 0) {
+                while(hashrate > 1000) {
+                    hashrate /= 1000
+                    i++
+                }
+            }
+            return parseFloat(hashrate).toFixed(2) + byteUnits[i]
+        },
+    },
     data () {
         return {
         }
