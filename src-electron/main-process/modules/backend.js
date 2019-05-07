@@ -329,6 +329,7 @@ export class Backend {
             let lmdb_dir = path.join(this.config_data.app.data_dir, "lmdb02")
             let log_dir = path.join(this.config_data.app.data_dir, "logs")
             let wallet_dir = path.join(this.config_data.app.data_dir, "wallets")
+            let gui_dir = path.join(this.config_data.app.data_dir, "gui")
 
             if(this.config_data.app.testnet) {
 
@@ -339,6 +340,7 @@ export class Backend {
                 lmdb_dir = path.join(testnet_dir, "lmdb02")
                 log_dir = path.join(testnet_dir, "logs")
                 wallet_dir = path.join(testnet_dir, "wallets")
+                gui_dir = path.join(testnet_dir, "gui")
 
             }
 
@@ -348,6 +350,8 @@ export class Backend {
                 fs.mkdirSync(log_dir);
             if (!fs.existsSync(wallet_dir))
                 fs.mkdirSync(wallet_dir)
+            if (!fs.existsSync(gui_dir))
+                fs.mkdirSync(gui_dir)
 
             // Check permissions
             try {
