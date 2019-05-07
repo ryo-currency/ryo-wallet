@@ -119,7 +119,7 @@ export class Pool {
 
         } catch(error) {
             logger.log("error", "Failed to start pool")
-            logger.log("error", JSON.stringify(error))
+            logger.log("error", error)
             this.sendGateway("show_notification", {type: "negative", message: "Pool failed to start", timeout: 2000})
         }
     }
@@ -467,9 +467,6 @@ export class Pool {
                     }
                     this.getBlock().catch(() => {})
                     return resolve({ hash: block_fast_hash, diff: hash_diff })
-                }).catch(error => {
-                    logger.log("error", JSON.stringify(error))
-                    return reject({ message: "Error submitting block", diff: hash_diff })
                 })
             } else if(hash_diff.lt(job.difficulty)) {
                 return reject({ message: "Rejected low difficulty share", diff: hash_diff })

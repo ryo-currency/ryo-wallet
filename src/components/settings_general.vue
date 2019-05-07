@@ -121,12 +121,12 @@
                              float-label="Daemon P2P Port" type="number" :decimals="0" :step="1" min="1024" max="65535" />
                 </div>
                 <div class="col-3">
-                    <q-input v-model="config.daemon.zmq_rpc_bind_port" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
-                             float-label="Daemon ZMQ Port" type="number" :decimals="0" :step="1" min="1024" max="65535" />
+                    <q-input v-model="config.daemon.rpc_bind_port" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
+                             float-label="Daemon RPC Port" type="number" :decimals="0" :step="1" min="1024" max="65535" />
                 </div>
                 <div class="col-3">
-                    <q-input v-model="config.app.ws_bind_port" :dark="theme=='dark'"
-                             float-label="Internal Wallet Port" type="number" :decimals="0" :step="1" min="1024" max="65535" />
+                    <q-input v-model="config.daemon.zmq_rpc_bind_port" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"
+                             float-label="Daemon ZMQ Port" type="number" :decimals="0" :step="1" min="1024" max="65535" />
                 </div>
                 <div class="col-3">
                     <q-input v-model="config.wallet.rpc_bind_port" :disable="config.daemon.type == 'remote'" :dark="theme=='dark'"

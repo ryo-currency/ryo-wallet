@@ -44,7 +44,6 @@ export class Gateway {
         });
 
         ipcRenderer.on("event", (event, data) => {
-            console.log(event)
             this.receive(data)
         })
 
@@ -147,7 +146,7 @@ export class Gateway {
                 break
 
             case "set_pool_data":
-                this.app.store.commit("gateway/set_pool_data", decrypted_data.data)
+                this.app.store.commit("gateway/set_pool_data", message.data)
                 break
 
             case "set_wallet_data":

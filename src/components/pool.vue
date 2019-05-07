@@ -832,13 +832,12 @@ export default {
     watch: {
         workers: function(workers, workersOld) {
             workersOld = workersOld.map(worker => worker.miner)
-            for(let i = 1; i < workers.length; i++) {
+            for(let i = 0; i < workers.length; i++) {
                 const worker = workers[i]
                 if(!workersOld.includes(worker.miner)) {
                     this.selected_workers.push(worker)
                 }
             }
-
         },
     },
     methods: {
