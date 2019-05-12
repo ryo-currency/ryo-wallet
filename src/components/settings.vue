@@ -41,15 +41,17 @@
 
 
                 <h6 class="q-mb-md" style="font-weight: 300">Preferences:</h6>
-
-                <q-checkbox v-model="minimize_to_tray" label="Minimize to Tray" />
+                <div>
+                    <q-checkbox v-model="minimize_to_tray" label="Minimize to Tray" />
+                </div>
 
                 <h6 class="q-mb-md" style="font-weight: 300">Notifications:</h6>
-
-                <q-checkbox v-model="notify_no_payment_id" label="Notify when making transaction without Payment ID" />
-
-                <q-checkbox v-model="notify_empty_password" label="Notify when creating or restoring a wallet without an empty password" />
-
+                <div>
+                    <q-checkbox v-model="notify_no_payment_id" label="Notify when making transaction without Payment ID" />
+                </div>
+                <div>
+                    <q-checkbox v-model="notify_empty_password" label="Notify when creating or restoring a wallet with an insecure password" />
+                </div>
 
             </div>
         </div>
