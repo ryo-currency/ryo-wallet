@@ -32,6 +32,8 @@ export class Pool {
 
         const { data_dir, testnet } = backend.config_data.app
 
+        this.testnet = testnet
+
         if(testnet) {
             this.nettype = ryo_utils_nettype.network_type.TESTNET
             logger.setLogFile(join(data_dir, "testnet", "logs"), "pool.log")
@@ -190,7 +192,25 @@ export class Pool {
             clearInterval(this.intervals.timeout)
         }
         this.intervals.job = setInterval(() => {
-            this.getBlock().catch(() => {})
+            this.getBlock().then(updated => {
+                if(updated) {
+                    // check for desynced daemon
+                    let url = "https://explorer.ryoblocks.com/api/networkinfo"
+                    if(this.testnet) {
+                        url = "https://tnexp.ryoblocks.com/api/networkinfo"
+                    }
+                    request(url).then(response => {
+                        if(response !== null && typeof response === "object" && response.hasOwnProperty("data") && response.data.hasOwnProperty("height")) {
+                            const remote_height = response.data.height
+                            const desynced = this.blocks.current.height < remote_height - 5
+                            this.sendGateway("set_pool_data", { desynced })
+                        }
+                    }).catch(() => {
+                    })
+                }
+            }).catch(() => {
+            })
+
         }, this.config.mining.blockRefreshInterval * 1000)
 
         this.intervals.timeout = setInterval(() => {
@@ -521,6 +541,7 @@ export class Pool {
                         const miner = this.connections[connection_id]
                         miner.pushJob(force)
                     }
+                    return resolve(true)
                 }
                 resolve()
             })

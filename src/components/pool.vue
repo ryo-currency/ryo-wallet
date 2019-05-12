@@ -20,6 +20,11 @@
 
         <div v-if="page=='main'">
             <div class="q-pa-md poolDashboard">
+
+                <div v-if="pool.desynced" class="q-mb-md notification danger">
+                    Warning: Pool may not be healthy, please restart Atom.
+                </div>
+
                 <div class="row gutter-sm">
                     <div class="col">
                         <div class="infoBox">
@@ -1158,6 +1163,12 @@ export default {
 </script>
 
 <style lang="scss">
+.notification.danger {
+    background-color: rgba(169,68,68,0.5);
+    border-color: rgba(169,68,68,0.8);
+    padding: 15px 15px;
+    border-radius: 3px;
+}
 .blockTable {
     &>div {
         overflow-y:hidden;

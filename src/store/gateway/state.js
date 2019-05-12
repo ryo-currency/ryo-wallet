@@ -85,6 +85,8 @@ export default {
         tx_pool_backlog: []
     },
     pool: {
+        status: 0,
+        desynced: false,
         stats: {
             currentEffort: 0
         },
