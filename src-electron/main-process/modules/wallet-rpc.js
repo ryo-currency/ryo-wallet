@@ -104,7 +104,7 @@ export class WalletRPC {
 
                 this.walletRPCProcess.stdout.on("data", (data) => {
 
-                    //process.stdout.write(`Wallet: ${data}`)
+                    process.stdout.write(`Wallet: ${data}`)
 
                     let lines = data.toString().split("\n");
                     let match, height = null
@@ -133,8 +133,8 @@ export class WalletRPC {
                         })
                     }
                 })
-                this.walletRPCProcess.on("error", err => process.stderr.write(`Wallet: ${err}`))
-                this.walletRPCProcess.on("close", code => process.stderr.write(`Wallet: exited with code ${code}`))
+                this.walletRPCProcess.on("error", err => process.stderr.write(`Wallet: ${err}\n`))
+                this.walletRPCProcess.on("close", code => process.stderr.write(`Wallet: exited with code ${code}\n`))
 
                 // To let caller know when the wallet is ready
                 let intrvl = setInterval(() => {

@@ -280,7 +280,7 @@ export class Backend {
             // i.e. check ports are integers and > 1024, check that data dir path exists, etc
 
             // save config file back to file, so updated options are stored on disk
-            fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8", () => {});
+            fs.writeFileSync(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8");
 
 
             // get network interfaces for UI
