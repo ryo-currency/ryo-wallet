@@ -1,6 +1,7 @@
 import { app, ipcMain, BrowserWindow, Menu, Tray, dialog } from "electron"
 import { Backend } from "./modules/backend"
 import menuTemplate from "./menu"
+import isDev from "electron-is-dev"
 const windowStateKeeper = require("electron-window-state")
 const path = require("path");
 
@@ -65,8 +66,13 @@ function createWindow() {
         }
     })
 
-    ipcMain.on("confirmClose", (e) => {
+    ipcMain.on("confirmClose", (e, restart) => {
         showConfirmClose = false
+
+        if(restart && !isDev) {
+            app.relaunch()
+        }
+
         if (backend) {
             if (process.platform !== "darwin") {
                 clearInterval(updateTrayInterval)

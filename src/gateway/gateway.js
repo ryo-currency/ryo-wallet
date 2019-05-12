@@ -57,16 +57,16 @@ export class Gateway {
 
     }
 
-    confirmClose(msg) {
+    confirmClose(msg, restart = false) {
         if(this.closeDialog) {
             return
         }
         this.closeDialog = true
         Dialog.create({
-            title: "Exit",
+            title: restart ? "Restart" : "Exit",
             message: msg,
             ok: {
-                label: "EXIT"
+                label: restart ? "RESTART" : "EXIT",
             },
             cancel: {
                 flat: true,
@@ -77,7 +77,7 @@ export class Gateway {
             this.closeDialog = false
             Loading.hide()
             this.router.replace({ path: "/quit" })
-            ipcRenderer.send("confirmClose")
+            ipcRenderer.send("confirmClose", restart)
         }).catch(() => {
             this.closeDialog = false
         })
@@ -163,7 +163,7 @@ export class Gateway {
                 break
 
             case "settings_changed_reboot":
-                this.confirmClose("Changes require restart. Would you like to exit now?")
+                this.confirmClose("Changes require restart. Would you like to restart now?", true)
                 break
 
             case "show_notification":
