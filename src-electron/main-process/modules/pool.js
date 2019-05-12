@@ -26,6 +26,7 @@ export class Pool {
             startup: null,
             job: null,
             timeout: null,
+            watchdog: null,
             retarget: null,
             stats: null
         }
@@ -61,6 +62,14 @@ export class Pool {
             }
 
         })
+
+        this.checkHeight().then(response => {
+            logger.log("info", "Contacted remote API -- watchdog is active")
+            logger.log("info", response)
+        }).catch(() => {
+            logger.log("warn", "Could not contact remote API")
+        })
+
     }
 
     init(options) {
@@ -180,6 +189,14 @@ export class Pool {
         })
     }
 
+    checkHeight() {
+        let url = "https://explorer.ryoblocks.com/api/networkinfo"
+        if(this.testnet) {
+            url = "https://tnexp.ryoblocks.com/api/networkinfo"
+        }
+        return request(url)
+    }
+
     statsHeartbeat() {
         this.sendGateway("set_pool_data", this.database.heartbeat())
     }
@@ -191,26 +208,12 @@ export class Pool {
         if(this.intervals.timeout) {
             clearInterval(this.intervals.timeout)
         }
-        this.intervals.job = setInterval(() => {
-            this.getBlock().then(updated => {
-                if(updated) {
-                    // check for desynced daemon
-                    let url = "https://explorer.ryoblocks.com/api/networkinfo"
-                    if(this.testnet) {
-                        url = "https://tnexp.ryoblocks.com/api/networkinfo"
-                    }
-                    request(url).then(response => {
-                        if(response !== null && typeof response === "object" && response.hasOwnProperty("data") && response.data.hasOwnProperty("height")) {
-                            const remote_height = response.data.height
-                            const desynced = this.blocks.current.height < remote_height - 5
-                            this.sendGateway("set_pool_data", { desynced })
-                        }
-                    }).catch(() => {
-                    })
-                }
-            }).catch(() => {
-            })
+        if(this.intervals.watchdog) {
+            clearInterval(this.intervals.watchdog)
+        }
 
+        this.intervals.job = setInterval(() => {
+            this.getBlock().catch(() => {})
         }, this.config.mining.blockRefreshInterval * 1000)
 
         this.intervals.timeout = setInterval(() => {
@@ -223,6 +226,30 @@ export class Pool {
                 }
             }
         }, 30000)
+
+        this.intervals.watchdog = setInterval(() => {
+            // check for desynced daemon
+            if(this.blocks.current == null) {
+                return
+            }
+            this.checkHeight().then(response => {
+                try {
+                    const json = JSON.parse(response)
+                    if(json !== null && typeof json === "object" && json.hasOwnProperty("data") && json.data.hasOwnProperty("height")) {
+                        const remote_height = json.data.height
+                        const desynced = this.blocks.current.height < remote_height - 5
+                        if(desynced) {
+                            logger.log("error", "Pool height is desynced { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
+                        } else {
+                            logger.log("info", "Pool height is okay { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
+                        }
+                        this.sendGateway("set_pool_data", { desynced })
+                    }
+                } catch(err) {
+                }
+            }).catch(() => {
+            })
+        }, 240000)
 
         this.startRetargetInterval()
     }
@@ -541,7 +568,6 @@ export class Pool {
                         const miner = this.connections[connection_id]
                         miner.pushJob(force)
                     }
-                    return resolve(true)
                 }
                 resolve()
             })
@@ -617,6 +643,9 @@ export class Pool {
             }
             if(this.intervals.timeout) {
                 clearInterval(this.intervals.timeout)
+            }
+            if(this.intervals.watchdog) {
+                clearInterval(this.intervals.watchdog)
             }
             if(this.intervals.retarget) {
                 clearInterval(this.intervals.retarget)
