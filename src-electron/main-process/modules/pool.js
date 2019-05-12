@@ -610,7 +610,6 @@ export class Pool {
                 logger.log("warn", "Closing server")
                 this.server.close(() => {
                     logger.log("warn", "Server closed")
-                    logger.write()
                     resolve()
                 })
             } else {
