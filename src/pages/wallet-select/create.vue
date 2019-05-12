@@ -42,6 +42,8 @@
             <q-input v-model="wallet.password_confirm" type="password" float-label="Confirm Password" :dark="theme=='dark'" />
         </q-field>
 
+        <PasswordStrength :password="wallet.password" ref="password_strength" />
+
         <q-field>
             <q-btn color="primary" @click="create" label="Create wallet" />
         </q-field>
@@ -51,6 +53,7 @@
 </template>
 
 <script>
+import PasswordStrength from "components/password_strength"
 import { required } from "vuelidate/lib/validators"
 import { mapState } from "vuex"
 export default {
@@ -161,10 +164,16 @@ export default {
             this.$router.replace({ path: "/wallet-select" });
         },
         warnEmptyPassword: function () {
-            if(this.notify_empty_password && this.wallet.password == "") {
+            let message = ""
+            if(this.wallet.password == "") {
+                message = "Using an empty password will leave your wallet unencrypted on your file system!"
+            } else if(this.$refs.password_strength.score < 3) {
+                message = "Using an insecure password could allow attackers to brute-force your wallet! Consider using a password with better strength."
+            }
+            if(this.notify_empty_password && message != "") {
                 return this.$q.dialog({
                     title: "Warning",
-                    message: "Using an empty password will leave your wallet unencrypted on your file system!",
+                    message: message,
                     options: {
                         type: "checkbox",
                         model: [],
@@ -187,6 +196,9 @@ export default {
                 })
             }
         }
+    },
+    components: {
+        PasswordStrength
     }
 }
 </script>

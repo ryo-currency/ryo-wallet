@@ -28,7 +28,20 @@ module.exports = function (ctx) {
             // gzip: true,
             // analyze: true,
             // extractCSS: false,
+            sourceMap: true,
             extendWebpack(cfg) {
+                cfg.module.rules.push({
+                    test: /RyoCoreCpp\.js$/,
+                    loader: "exports-loader"
+                })
+                cfg.module.rules.push({
+                    test:  /RyoCoreCpp\.wasm$/,
+                    type: "javascript/auto",
+                    loader: "file-loader",
+                    options: {
+                        name: "[name]-[hash].[ext]",
+                    }
+                })
                 /*
                 cfg.module.rules.push({
                     enforce: "pre",
@@ -73,6 +86,8 @@ module.exports = function (ctx) {
                 "QStepper",
                 "QStepperNavigation",
                 "QSpinner",
+                "QSlider",
+                "QChip",
                 "QList",
                 "QListHeader",
                 "QItem",
@@ -88,7 +103,12 @@ module.exports = function (ctx) {
                 "QInnerLoading",
                 "QInfiniteScroll",
                 "QDatetime",
-                "QContextMenu"
+                "QContextMenu",
+                "QTable",
+                "QTh",
+                "QTr",
+                "QTd",
+                "QTableColumns"
             ],
             directives: [
                 "Ripple",
@@ -151,7 +171,18 @@ module.exports = function (ctx) {
         electron: {
             bundler: "builder", // or "packager"
             extendWebpack(cfg) {
-                // do something with Electron process Webpack cfg
+                cfg.module.rules.push({
+                    test: /RyoCoreCpp\.js$/,
+                    loader: "exports-loader"
+                })
+                cfg.module.rules.push({
+                    test:  /RyoCoreCpp\.wasm$/,
+                    type: "javascript/auto",
+                    loader: "file-loader",
+                    options: {
+                        name: "[name].[ext]",
+                    }
+                })
             },
             packager: {
                 // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
@@ -181,13 +212,13 @@ module.exports = function (ctx) {
                 // },
 
                 linux: {
-                    target: ["AppImage", "snap", "tar.xz"],
+                    target: ["AppImage"],
                     icon: "src-electron/icons/icon_512x512.png",
                     category: "Finance"
                 },
 
                 win: {
-                    target: ["7z", "zip"],
+                    target: ["zip"],
                     icon: "src-electron/icons/icon.ico"
                 },
 

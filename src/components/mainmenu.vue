@@ -14,6 +14,11 @@
                         <q-item-tile label>Settings</q-item-tile>
                     </q-item-main>
                 </q-item>
+                <q-item v-if="daemon_type != 'remote'" v-close-overlay @click.native="openPool">
+                    <q-item-main>
+                        <q-item-tile label>Solo Mining</q-item-tile>
+                    </q-item-main>
+                </q-item>
                 <q-item v-close-overlay @click.native="showAbout(true)">
                     <q-item-main>
                         <q-item-tile label>About</q-item-tile>
@@ -29,6 +34,7 @@
 
     </q-btn>
     <settings-modal ref="settingsModal" />
+    <pool-modal ref="poolModal" />
     <q-modal minimized ref="aboutModal">
         <div class="about-modal">
 
@@ -63,6 +69,7 @@
 import { version, daemonVersion } from "../../package.json"
 import { mapState } from "vuex"
 import SettingsModal from "components/settings"
+import PoolModal from "components/pool"
 export default {
     name: "MainMenu",
     props: {
@@ -84,6 +91,7 @@ export default {
     },
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
+        daemon_type: state => state.gateway.app.config.daemon.type
     }),
     methods: {
         openExternal (url) {
@@ -97,6 +105,9 @@ export default {
         },
         openSettings () {
             this.$refs.settingsModal.isVisible = true
+        },
+        openPool () {
+            this.$refs.poolModal.isVisible = true
         },
         switchWallet () {
             this.$q.dialog({
@@ -126,7 +137,8 @@ export default {
         }
     },
     components: {
-        SettingsModal
+        SettingsModal,
+        PoolModal
     }
 }
 </script>

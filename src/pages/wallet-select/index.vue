@@ -1,5 +1,13 @@
 <template>
 <q-page>
+    <template v-if="!wallets.list.length">
+        <div class="q-px-md q-py-lg">
+            <h2 class="q-my-sm text-weight-thin">Welcome to Ryo Wallet Atom</h2>
+            <p>To get started, select one of the options below.</p>
+
+        </div>
+    </template>
+
 
     <q-list link no-border :dark="theme=='dark'">
         <template v-if="wallets.list.length">
@@ -46,19 +54,34 @@
             <q-item-separator />
         </template>
         <q-item @click.native="createNewWallet()">
+            <q-item-side>
+                <q-icon name="add_circle_outline" size="40px" />
+            </q-item-side>
             <q-item-main label="Create new wallet" />
         </q-item>
         <q-item @click.native="restoreWallet()">
+            <q-item-side>
+                <q-icon name="input" size="40px" />
+            </q-item-side>
             <q-item-main label="Restore wallet from seed" />
         </q-item>
         <q-item @click.native="restoreViewWallet()">
+            <q-item-side>
+                <q-icon name="remove_red_eye" size="40px" />
+            </q-item-side>
             <q-item-main label="Restore view-only wallet" />
         </q-item>
         <q-item @click.native="importWallet()">
+            <q-item-side>
+                <q-icon name="file_copy" size="40px" />
+            </q-item-side>
             <q-item-main label="Import wallet from file" />
         </q-item>
         <template v-if="wallets.legacy.length">
             <q-item @click.native="importLegacyWallet()">
+                <q-item-side>
+                    <q-icon name="file_copy" size="40px" />
+                </q-item-side>
                 <q-item-main label="Import wallet from legacy gui" />
             </q-item>
         </template>
