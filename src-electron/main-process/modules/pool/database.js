@@ -112,12 +112,6 @@ export class Database {
         this.cleanStats()
 
         const blockHashes = Object.keys(blocks)
-        let averageEffort = 0
-        for(let hash of blockHashes) {
-            let block = blocks[hash]
-            averageEffort += block.hashes / block.diff
-        }
-        averageEffort /= blockHashes.length
 
         let diff = 0
         let height = 0
@@ -125,8 +119,22 @@ export class Database {
             diff = this.pool.blocks.current.difficulty
             height = this.pool.blocks.current.height
         }
+
+        let averageEffort = 0
+        if(blockHashes.length) {
+            for(let hash of blockHashes) {
+                let block = blocks[hash]
+                averageEffort += block.hashes / block.diff
+            }
+            averageEffort /= blockHashes.length
+        }
+
         const roundHashes = this.getRoundHashes()
-        const effort = Math.round(100 * roundHashes / diff) / 100
+        let effort = 0
+        if(diff != 0) {
+            effort = Math.round(100 * roundHashes / diff) / 100
+        }
+
         const blocksFound = Object.keys(blocks).length
         const networkHashrate = diff / 240
         const blockTime = 1000 * 240 * networkHashrate / h.hashrate_5min
