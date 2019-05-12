@@ -261,7 +261,7 @@ export class WalletRPC {
             this.wallet_state.name = filename
             this.wallet_state.open = true
 
-            this.finalizeNewWallet(filename)
+            this.finalizeNewWallet(filename, true)
 
         })
 
@@ -291,6 +291,21 @@ export class WalletRPC {
             refresh_start_height = 0
         }
         seed = seed.trim().replace(/\s{2,}/g, " ")
+
+        let seed_words = seed.split(" ")
+        switch(seed_words.length) {
+            case 14:
+            case 24:
+            case 25:
+                break
+            case 26:
+                seed_words.pop()
+                seed = seed_words.join(" ")
+                break
+            default:
+                this.sendGateway("set_wallet_error", {status: {code: -1, message:"Invalid seed word length"}})
+                return
+        }
 
         this.sendRPC("restore_wallet", {
             filename,
@@ -424,7 +439,7 @@ export class WalletRPC {
 
     }
 
-    finalizeNewWallet(filename) {
+    finalizeNewWallet(filename, newly_created=false) {
 
         Promise.all([
             this.sendRPC("get_address"),
@@ -441,7 +456,8 @@ export class WalletRPC {
                     balance: 0,
                     unlocked_balance: 0,
                     height: 0,
-                    view_only: false
+                    view_only: false,
+                    newly_created
                 },
                 secret: {
                     mnemonic: "",
