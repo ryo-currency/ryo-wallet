@@ -44,6 +44,31 @@
                 <div>
                     <q-checkbox v-model="minimize_to_tray" label="Minimize to Tray" />
                 </div>
+                <div class="row items-end">
+                    <div class="col-auto q-pb-sm">
+                        <q-icon name="timer" size="24px" />
+                        <span class="q-ml-sm">Inactivity Timeout</span>
+                    </div>
+                    <div class="col q-px-xl">
+                        <div style="max-width:500px">
+                            <q-slider
+                                v-model="timeout"
+                                label-always
+                                fill-handle-always
+                                :min="0" :max="65" :step="5"
+                                :label-value="timeout_human"
+                                />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <small>
+                            Amount of time with no user input before logging out of open wallets
+                        </small>
+                    </div>
+                </div>
+
 
                 <h6 class="q-mb-md" style="font-weight: 300">Notifications:</h6>
                 <div>
@@ -93,21 +118,32 @@ import { mapState } from "vuex"
 import SettingsGeneral from "components/settings_general"
 export default {
     name: "SettingsModal",
-    computed: mapState({
-        daemon: state => state.gateway.daemon,
-        pending_config: state => state.gateway.app.pending_config,
-        config: state => state.gateway.app.config,
-        tabs: function(state) {
-            let tabs = [
-                {label: 'General', value: 'general', icon: 'settings'},
-                {label: 'Preferences', value: 'preferences', icon: 'person'},
-            ]
-            if(state.gateway.app.config.daemon.type != 'remote') {
-                tabs.push({label: 'Peers', value: 'peers', icon: 'cloud_queue'})
+    computed: {
+        timeout_human() {
+            if(this.timeout === 0) {
+                return "1 minute"
+            } else if(this.timeout === 65) {
+                return "Never"
+            } else {
+                return this.timeout+" minutes"
             }
-            return tabs
-        }
-    }),
+        },
+        ...mapState({
+            daemon: state => state.gateway.daemon,
+            pending_config: state => state.gateway.app.pending_config,
+            config: state => state.gateway.app.config,
+            tabs: function(state) {
+                let tabs = [
+                    {label: 'General', value: 'general', icon: 'settings'},
+                    {label: 'Preferences', value: 'preferences', icon: 'person'},
+                ]
+                if(state.gateway.app.config.daemon.type != 'remote') {
+                    tabs.push({label: 'Peers', value: 'peers', icon: 'cloud_queue'})
+                }
+                return tabs
+            }
+        })
+    },
     data () {
         return {
             page: "general",
@@ -115,6 +151,7 @@ export default {
             minimize_to_tray: null,
             notify_no_payment_id: null,
             notify_empty_password: null,
+            timeout: 10,
             isVisible: false
         }
     },
@@ -123,6 +160,7 @@ export default {
         this.minimize_to_tray = this.config.preference.minimize_to_tray === null ? false : this.config.preference.minimize_to_tray
         this.notify_no_payment_id = this.config.preference.notify_no_payment_id
         this.notify_empty_password = this.config.preference.notify_empty_password
+        this.timeout = Math.min(Math.floor(this.config.preference.timeout / (60*1000*5)) * 5, 65)
     },
     watch: {
         theme: function (theme, old) {
@@ -154,6 +192,20 @@ export default {
             this.$gateway.send("core", "quick_save_config", {
                 preference: {
                     notify_empty_password: this.notify_empty_password
+                }
+            })
+        },
+        timeout: function (timeout, old) {
+            if(old == null) return
+            if(timeout === 0) {
+                timeout = 1
+            } else if(timeout === 65) {
+                timeout = 365*24*60 // never is actually one year
+            }
+            timeout *= 60*1000 // convert minutes to ms
+            this.$gateway.send("core", "quick_save_config", {
+                preference: {
+                    timeout: timeout
                 }
             })
         },

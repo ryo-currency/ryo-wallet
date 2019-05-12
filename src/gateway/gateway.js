@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron"
-import { Notify, Dialog, Loading, LocalStorage } from "quasar"
+import { debounce, Notify, Dialog, Loading, LocalStorage } from "quasar"
 
 export class Gateway {
 
@@ -54,6 +54,45 @@ export class Gateway {
         ipcRenderer.on("confirmMinimizeTray", () => {
             this.confirmMinimizeTray()
         });
+
+        this.inactiveTimeout = null
+        let applyInactiveTimeout = (timeout) => {
+            this.resetInactiveTimeoutFn = debounce(() => {
+                if(this.inactiveTimeout !== null) {
+                    clearTimeout(this.inactiveTimeout)
+                }
+                this.inactiveTimeout = setTimeout(() => {
+                    if(this.app.store.state.gateway.wallet.status.code === 0 && this.app.store.getters["gateway/isAbleToSend"]) {
+                        this.send("wallet", "close_wallet")
+                        this.receive({ event: "return_to_wallet_select", data: {}})
+                        Dialog.create({
+                            title: "Timeout",
+                            message: "You have been logged out due to inactivity.",
+                            ok: {
+                                label: "OK"
+                            }
+                        }).catch(() => {
+                            this.closeDialog = false
+                        })
+
+                    } else {
+                        this.resetInactiveTimeoutFn()
+                    }
+                }, timeout)
+            }, 300)
+        }
+        applyInactiveTimeout(this.app.store.state.gateway.app.config.preference.timeout)
+        this.app.store.watch( state => state.gateway.app.config.preference.timeout, (timeout) => {
+            applyInactiveTimeout(timeout)
+        })
+        let events = ["mousemove", "touchmove", "keypress"]
+        for(let i in events) {
+            window.addEventListener(events[i], () => {
+                if(typeof this.resetInactiveTimeoutFn === "function") {
+                    this.resetInactiveTimeoutFn()
+                }
+            })
+        }
 
     }
 

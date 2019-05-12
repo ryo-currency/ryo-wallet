@@ -86,6 +86,7 @@ module.exports = function (ctx) {
                 "QStepper",
                 "QStepperNavigation",
                 "QSpinner",
+                "QSlider",
                 "QChip",
                 "QList",
                 "QListHeader",

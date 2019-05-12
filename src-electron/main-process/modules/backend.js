@@ -51,7 +51,8 @@ export class Backend {
             preference: {
                 notify_no_payment_id: true,
                 notify_empty_password: true,
-                minimize_to_tray: false
+                minimize_to_tray: false,
+                timeout: 600000 // 10 minutes
             },
 
             daemon: {
