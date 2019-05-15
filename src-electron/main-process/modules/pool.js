@@ -456,6 +456,7 @@ export class Pool {
 
                 this.processShare(job, block, nonce, hash).then(result => {
                     logger.log("info", "Accepted share { difficulty: %d, actual: %d } from %s@%s", [job.difficulty, result.diff, miner.workerName, miner.ip])
+                    reply(null, { status: "OK" })
                     if(result.hash) {
                         logger.log("success", "Block found { hash: %s, height: %d } by %s@%s", [result.hash, job.height, miner.workerName, miner.ip])
                         this.database.recordShare(miner, job, true, result.hash, block)
@@ -464,7 +465,6 @@ export class Pool {
                     }
                     miner.heartbeat()
                     miner.recordShare()
-                    reply(null, { status: "OK" })
                 }).catch(error => {
                     logger.log("info", "Rejected share { difficulty: %d, actual: %d } from %s@%s", [job.difficulty, error.diff, miner.workerName, miner.ip])
                     logger.log("error", "%s { height: %d } from worker %s@%s", [error.message, job.height, miner.workerName, miner.ip])
