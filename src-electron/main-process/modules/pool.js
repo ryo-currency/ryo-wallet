@@ -228,30 +228,47 @@ export class Pool {
         }, 30000)
 
         this.intervals.watchdog = setInterval(() => {
-            // check for desynced daemon
-            if(this.blocks.current == null) {
-                return
-            }
-            this.checkHeight().then(response => {
-                try {
-                    const json = JSON.parse(response)
-                    if(json !== null && typeof json === "object" && json.hasOwnProperty("data") && json.data.hasOwnProperty("height")) {
-                        const remote_height = json.data.height
-                        const desynced = this.blocks.current.height < remote_height - 5
-                        if(desynced) {
-                            logger.log("error", "Pool height is desynced { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
-                        } else {
-                            logger.log("info", "Pool height is okay { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
-                        }
-                        this.sendGateway("set_pool_data", { desynced })
-                    }
-                } catch(err) {
-                }
-            }).catch(() => {
-            })
+            this.watchdog()
         }, 240000)
+        this.watchdog()
 
         this.startRetargetInterval()
+    }
+
+    watchdog() {
+        // check for desynced daemon and incorrect local clock
+        this.checkHeight().then(response => {
+            try {
+                const json = JSON.parse(response)
+                if(json === null || typeof json !== "object" || !json.hasOwnProperty("data")) {
+                    return
+                }
+                let desynced = false, system_clock_error = false
+                if(json.data.hasOwnProperty("height") && this.blocks.current != null) {
+                    const remote_height = json.data.height
+                    desynced = this.blocks.current.height < remote_height - 5
+                    if(desynced) {
+                        logger.log("error", "Pool height is desynced { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
+                    } else {
+                        logger.log("info", "Pool height is okay { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
+                    }
+                }
+                if(json.data.hasOwnProperty("server_time")) {
+                    const allowed_time_variance = 15 * 60 // 15 minutes
+                    const server_time = json.data.server_time
+                    const system_time = Math.floor(Date.now() / 1000)
+                    system_clock_error = Math.abs(server_time - system_time) > allowed_time_variance
+                    if(system_clock_error) {
+                        logger.log("error", "System clock is not correct { server: %d, local: %d }", [server_time, system_time])
+                    } else {
+                        logger.log("info", "System clock is okay { server: %d, local: %d }", [server_time, system_time])
+                    }
+                }
+                this.sendGateway("set_pool_data", { desynced, system_clock_error })
+            } catch(err) {
+            }
+        }).catch(() => {
+        })
     }
 
     startRetargetInterval() {

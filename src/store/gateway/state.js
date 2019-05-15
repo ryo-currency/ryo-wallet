@@ -89,6 +89,7 @@ export default {
     pool: {
         status: 0,
         desynced: false,
+        system_clock_error: false,
         stats: {
             currentEffort: 0
         },

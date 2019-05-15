@@ -25,6 +25,10 @@
                     Warning: Pool may not be healthy, please restart Atom.
                 </div>
 
+                <div v-if="pool.system_clock_error" class="q-mb-md notification danger">
+                    Warning: System clock differs by more than 15 minutes from remote, this will cause problems.
+                </div>
+
                 <div class="row gutter-sm">
                     <div class="col">
                         <div class="infoBox">
