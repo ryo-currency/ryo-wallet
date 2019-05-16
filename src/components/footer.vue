@@ -66,14 +66,14 @@ export default {
             if(pct == 100.0 && this.daemon.info.height_without_bootstrap < this.target_height)
                 return 99.9
             else
-                return pct
+                return Math.min(pct, 100)
         },
         wallet_pct (state) {
             let pct = (100 * this.wallet.info.height / this.target_height).toFixed(1)
             if(pct == 100.0 && this.wallet.info.height < this.target_height)
                 return 99.9
             else
-                return pct
+                return Math.min(pct, 100)
         },
         status(state) {
             if(this.config.daemon.type === "local") {
