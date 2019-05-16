@@ -104,6 +104,12 @@ function createWindow() {
         }
     })
 
+    ipcMain.on("autostartSettings", (e, openAtLogin) => {
+        app.setLoginItemSettings({
+            openAtLogin
+        })
+    })
+
     ipcMain.on("confirmMinimizeTray", (e, minimize_to_tray) => {
         mainWindow.setMinimizable(true)
         backend.config_data.preference.minimize_to_tray = minimize_to_tray

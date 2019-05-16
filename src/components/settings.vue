@@ -44,6 +44,9 @@
                 <div>
                     <q-checkbox v-model="minimize_to_tray" label="Minimize to Tray" />
                 </div>
+                <div v-if="$q.platform.is.desktop && ($q.platform.is.win || $q.platform.is.mac)">
+                    <q-checkbox v-model="autostart" label="Launch Ryo Wallet Atom on Start-up" />
+                </div>
                 <div class="row items-end">
                     <div class="col-auto q-pb-sm">
                         <q-icon name="timer" size="24px" />
@@ -114,6 +117,7 @@
 </template>
 
 <script>
+import { Platform } from "quasar"
 import { mapState } from "vuex"
 import SettingsGeneral from "components/settings_general"
 export default {
@@ -149,6 +153,7 @@ export default {
             page: "general",
             theme: null,
             minimize_to_tray: null,
+            autostart: null,
             notify_no_payment_id: null,
             notify_empty_password: null,
             timeout: 10,
@@ -158,6 +163,7 @@ export default {
     mounted: function () {
         this.theme = this.config.appearance.theme
         this.minimize_to_tray = this.config.preference.minimize_to_tray === null ? false : this.config.preference.minimize_to_tray
+        this.autostart = this.config.preference.autostart == null ? false : this.config.preference.autostart
         this.notify_no_payment_id = this.config.preference.notify_no_payment_id
         this.notify_empty_password = this.config.preference.notify_empty_password
         this.timeout = Math.min(Math.floor(this.config.preference.timeout / (60*1000*5)) * 5, 65)
@@ -176,6 +182,15 @@ export default {
             this.$gateway.send("core", "quick_save_config", {
                 preference: {
                     minimize_to_tray: this.minimize_to_tray
+                }
+            })
+        },
+        autostart: function (autostart, old) {
+            if(old == null) return
+            this.$gateway.setAutostartSettings(this.autostart)
+            this.$gateway.send("core", "quick_save_config", {
+                preference: {
+                    autostart: this.autostart
                 }
             })
         },

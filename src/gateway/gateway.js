@@ -96,6 +96,10 @@ export class Gateway {
 
     }
 
+    setAutostartSettings(enabled) {
+        ipcRenderer.send("autostartSettings", enabled)
+    }
+
     confirmClose(msg, restart = false) {
         if(this.closeDialog) {
             return
