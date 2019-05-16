@@ -202,19 +202,12 @@ export class Pool {
     }
 
     startHeartbeat() {
-        if(this.intervals.job) {
-            clearInterval(this.intervals.job)
-        }
         if(this.intervals.timeout) {
             clearInterval(this.intervals.timeout)
         }
         if(this.intervals.watchdog) {
             clearInterval(this.intervals.watchdog)
         }
-
-        this.intervals.job = setInterval(() => {
-            this.getBlock().catch(() => {})
-        }, this.config.mining.blockRefreshInterval * 1000)
 
         this.intervals.timeout = setInterval(() => {
             for(let connection_id in this.connections) {
@@ -231,6 +224,8 @@ export class Pool {
             this.watchdog()
         }, 240000)
         this.watchdog()
+
+        this.startJobRefreshInterval()
 
         this.startRetargetInterval()
     }
@@ -269,6 +264,23 @@ export class Pool {
             }
         }).catch(() => {
         })
+    }
+
+    startJobRefreshInterval() {
+
+        let blockRefreshInterval = 1 * 1000 // 1 second
+        if(this.config.mining.enableBlockRefreshInterval) {
+            if(!Number.isNaN(this.config.mining.blockRefreshInterval * 1000)) {
+                blockRefreshInterval = this.config.mining.blockRefreshInterval * 1000
+            }
+        }
+
+        if(this.intervals.job) {
+            clearInterval(this.intervals.job)
+        }
+        this.intervals.job = setInterval(() => {
+            this.getBlock().catch(() => {})
+        }, blockRefreshInterval)
     }
 
     startRetargetInterval() {

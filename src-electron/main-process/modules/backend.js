@@ -86,6 +86,7 @@ export class Backend {
                 },
                 mining: {
                     address: "",
+                    enableBlockRefreshInterval: false,
                     blockRefreshInterval: 5,
                     minerTimeout: 900,
                     uniform: true,
