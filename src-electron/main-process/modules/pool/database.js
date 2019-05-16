@@ -15,6 +15,7 @@ export class Database {
         } else {
             this.sqlitePath = join(options.data_dir, "gui", "pool_stats.sqlite")
         }
+        this.vacuum_interval = 1000 * 60 * 60 * 24 // 24 hours
     }
 
     start() {
@@ -53,6 +54,13 @@ export class Database {
             hashrate_avg_clean: this.db.prepare("DELETE FROM hashrate WHERE time < :time"),
         }
 
+
+        this.vacuum()
+
+        setInterval(() => {
+            this.vacuum()
+        }, this.vacuum_interval)
+
     }
 
     stop() {
@@ -63,6 +71,18 @@ export class Database {
 
     getTables() {
         return this.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()
+    }
+
+    vacuum() {
+        if(!this.db) {
+            return
+        }
+        try {
+            this.db.exec("VACUUM")
+            logger.log("info", "Success vacuuming database")
+        } catch(error) {
+            logger.log("error", "Error vacuuming database")
+        }
     }
 
     init() {
