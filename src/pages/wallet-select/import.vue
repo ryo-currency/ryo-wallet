@@ -38,12 +38,15 @@
 
     </div>
 
+    <WalletLoading ref="loading" />
+
 </q-page>
 </template>
 
 <script>
 import { required } from "vuelidate/lib/validators"
 import { mapState } from "vuex"
+import WalletLoading from "components/wallet_loading"
 export default {
     data () {
         return {
@@ -67,11 +70,11 @@ export default {
                     case 1:
                         break;
                     case 0:
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$router.replace({ path: "/wallet-select/created" });
                         break;
                     default:
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$q.notify({
                             type: "negative",
                             timeout: 1000,
@@ -115,9 +118,7 @@ export default {
                 return
             }
 
-            this.$q.loading.show({
-                delay: 0
-            })
+            this.$refs.loading.show()
 
             this.$gateway.send("wallet", "import_wallet", this.wallet);
         },

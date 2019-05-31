@@ -25,6 +25,10 @@
                     Warning: Pool may not be healthy, please restart Atom.
                 </div>
 
+                <div v-if="pool.system_clock_error" class="q-mb-md notification danger">
+                    Warning: System clock differs by more than 15 minutes from remote, this will cause problems.
+                </div>
+
                 <div class="row gutter-sm">
                     <div class="col">
                         <div class="infoBox">
@@ -417,7 +421,24 @@
                 <q-modal v-model="modals.xmr_stak">
                     <div class="modal-header">Config example: xmr-stak</div>
                     <div class="q-ma-lg">
-                        <pre>
+
+                        <div class="row">
+                            <div class="col">
+                                <p class="q-ma-none">Place this config example in <code>pools.txt</code></p>
+                            </div>
+                            <div class="col-auto">
+                                <q-btn
+                                    color="primary" style="width:25px;"
+                                    size="sm" icon="file_copy"
+                                    @click="copyConfig()">
+                                    <q-tooltip anchor="center left" self="center right" :offset="[5, 10]">
+                                        Copy config
+                                    </q-tooltip>
+                                </q-btn>
+                            </div>
+                        </div>
+
+                        <pre ref="config-xmrstak">
 "pool_list" :
 [
     {
@@ -435,11 +456,22 @@
                         </pre>
 
                         <div class="q-mt-lg">
-                            <q-btn
-                                color="primary"
-                                @click="modals.xmr_stak = false"
-                                label="Close"
-                                />
+                            <div class="row justify-between">
+                                <div class="col-auto">
+                                    <q-btn
+                                        color="primary"
+                                        @click="modals.xmr_stak = false"
+                                        label="Close"
+                                        />
+                                </div>
+                                <div class="col-auto">
+                                    <q-btn
+                                        color="primary"
+                                        @click="openSoftware()"
+                                        label="Download xmr-stak"
+                                        />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </q-modal>
@@ -708,6 +740,7 @@ import HashrateChart from "components/hashrate_chart"
 import FormatRyo from "components/format_ryo"
 import Identicon from "components/identicon"
 import distanceInWords from "date-fns/distance_in_words"
+const { clipboard } = require("electron")
 export default {
     name: "PoolModal",
     computed: {
@@ -919,6 +952,26 @@ export default {
         },
         openExplorer(hash) {
             this.$gateway.send("core", "open_explorer", {type: "block", id: hash})
+        },
+        openSoftware(software="xmrstak") {
+            let url = ""
+            switch(software) {
+                case "xmrstak":
+                    url = "https://github.com/fireice-uk/xmr-stak/releases/latest"
+                    break
+                default:
+                    return
+            }
+            this.$gateway.send("core", "open_url", {url})
+        },
+        copyConfig(software="xmrstak") {
+            const config = this.$refs[`config-${software}`].innerHTML
+            clipboard.writeText(config)
+            this.$q.notify({
+                type: "positive",
+                timeout: 1000,
+                message: "Config copied to clipboard"
+            })
         },
         resetVarDiff() {
             this.settings.varDiff = JSON.parse(JSON.stringify(this.varDiffDefaults))

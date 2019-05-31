@@ -52,6 +52,7 @@ export class Backend {
                 notify_no_payment_id: true,
                 notify_empty_password: true,
                 minimize_to_tray: false,
+                autostart: false,
                 timeout: 600000 // 10 minutes
             },
 
@@ -86,6 +87,7 @@ export class Backend {
                 },
                 mining: {
                     address: "",
+                    enableBlockRefreshInterval: false,
                     blockRefreshInterval: 5,
                     minerTimeout: 900,
                     uniform: true,
@@ -279,6 +281,15 @@ export class Backend {
 
             // here we may want to check if config data is valid, if not also send code -1
             // i.e. check ports are integers and > 1024, check that data dir path exists, etc
+
+            // Filter out http:// from remote_host (remote daemon address)
+            if(this.config_data.daemon.remote_host.indexOf("//") !== -1) {
+                let remote_host = this.config_data.daemon.remote_host
+                remote_host = this.config_data.daemon.remote_host.split("//")
+                remote_host.shift()
+                remote_host = remote_host.join("//")
+                this.config_data.daemon.remote_host = remote_host
+            }
 
             // save config file back to file, so updated options are stored on disk
             fs.writeFileSync(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8");

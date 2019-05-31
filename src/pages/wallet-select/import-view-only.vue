@@ -84,6 +84,9 @@
         </q-field>
 
     </div>
+
+    <WalletLoading ref="loading" />
+
 </q-page>
 </template>
 
@@ -91,6 +94,7 @@
 import { required, numeric } from "vuelidate/lib/validators"
 import { privkey, address } from "src/validators/common"
 import { mapState } from "vuex"
+import WalletLoading from "components/wallet_loading"
 export default {
     data () {
         return {
@@ -118,11 +122,11 @@ export default {
                     case 1:
                         break;
                     case 0:
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$router.replace({ path: "/wallet-select/created" });
                         break;
                     default:
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$q.notify({
                             type: "negative",
                             timeout: 1000,
@@ -189,15 +193,16 @@ export default {
                 return
             }
 
-            this.$q.loading.show({
-                delay: 0
-            })
+            this.$q.loading.show()
 
             this.$gateway.send("wallet", "restore_view_wallet", this.wallet);
         },
         cancel() {
             this.$router.replace({ path: "/wallet-select" });
         }
+    },
+    components: {
+        WalletLoading
     }
 }
 </script>

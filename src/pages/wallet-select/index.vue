@@ -87,6 +87,8 @@
         </template>
     </q-list>
 
+    <WalletLoading ref="loading" />
+
 </q-page>
 </template>
 
@@ -94,6 +96,7 @@
 const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import Identicon from "components/identicon"
+import WalletLoading from "components/wallet_loading"
 export default {
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
@@ -119,17 +122,13 @@ export default {
                         color: this.theme=="dark"?"white":"dark"
                     }
                 }).then(password => {
-                    this.$q.loading.show({
-                        delay: 0
-                    })
+                    this.$refs.loading.show()
                     this.$gateway.send("wallet", "open_wallet", {name: wallet.name, password: password});
                 })
                 .catch(() => {
                 })
             } else {
-                this.$q.loading.show({
-                    delay: 0
-                })
+                this.$refs.loading.show()
                 this.$gateway.send("wallet", "open_wallet", {name: wallet.name, password: ""});
             }
         },
@@ -170,12 +169,12 @@ export default {
                 if(val.code == old.code) return
                 switch(this.status.code) {
                     case 0: // Wallet loaded
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$router.replace({ path: "/wallet" });
                         break;
                     case -1: // Error
                     case -22:
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$q.notify({
                             type: "negative",
                             timeout: 1000,
@@ -193,7 +192,8 @@ export default {
         }
     },
     components: {
-        Identicon
+        Identicon,
+        WalletLoading
     }
 }
 </script>
