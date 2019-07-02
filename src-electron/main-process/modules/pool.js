@@ -260,7 +260,7 @@ export class Pool {
                     }
                 }
                 this.sendGateway("set_pool_data", { desynced, system_clock_error })
-            } catch(err) {
+            } catch(error) {
             }
         }).catch(() => {
         })
@@ -345,7 +345,7 @@ export class Pool {
                     }
                 }).on("error", error => {
                     if(error.code !== "ECONNRESET") {
-                        logger.log("warn", "Socket error from %s - %j", [socket.remoteAddress, err])
+                        logger.log("warn", "Socket error from %s - %j", [socket.remoteAddress, error])
                     }
                 }).on("close", () => {
                     logger.log("warn", "Socket closed from %s@%s", [socket.workerName, socket.remoteAddress])
