@@ -9,6 +9,8 @@
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue src",
+    "dev": "quasar dev -m electron -t mat",
+    "build": "quasar build -m electron -t mat",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "test": "echo \"No test specified\" && exit 0"
   },
