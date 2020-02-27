@@ -170,7 +170,8 @@ export class Daemon {
                             // Ignore
                         } else {
                             clearInterval(intrvl);
-                            reject(error);
+                            process.stdout.write(data);
+                            reject(data.error);
                         }
                     }
                 })
