@@ -62,6 +62,7 @@ export class WalletRPC {
                     "--rpc-login", this.auth[0]+":"+this.auth[1],
                     "--rpc-bind-port", options.wallet.rpc_bind_port,
                     "--daemon-address", daemon_address,
+                    "--log-file-level", options.wallet.log_level,
                     "--log-level", "3",
                     // "--log-level", "*:WARNING,net*:FATAL,net.http:DEBUG,global:INFO,verify:FATAL,stacktrace:INFO",
                 ]
@@ -112,7 +113,8 @@ export class WalletRPC {
                             height = match[2]
                         }
                     })
-                    if(height && Date.now() - this.last_height_send_time > 1000) {
+
+                    if(this.wallet_info.height === 0 && height && Date.now() - this.last_height_send_time > 1000) {
                         this.last_height_send_time = Date.now()
                         this.sendGateway("set_wallet_data", {
                             info: {
