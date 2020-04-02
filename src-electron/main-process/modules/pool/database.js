@@ -51,7 +51,7 @@ export class Database {
 
             hashrate_avg: this.db.prepare("SELECT * FROM hashrateAvg"),
             hashrate_avg_add: this.db.prepare("INSERT OR IGNORE INTO hashrateAvg(miner, time, hashes) VALUES(:miner, :time, :hashes)"),
-            hashrate_avg_clean: this.db.prepare("DELETE FROM hashrate WHERE time < :time"),
+            hashrate_avg_clean: this.db.prepare("DELETE FROM hashrateAvg WHERE time < :time"),
         }
 
 
@@ -86,6 +86,7 @@ export class Database {
     }
 
     init() {
+        this.db.pragma("journal_mode = WAL");
         this.db.prepare("CREATE TABLE IF NOT EXISTS round(miner TEXT PRIMARY KEY, hashes INTEGER) WITHOUT ROWID;").run()
         this.db.prepare("CREATE TABLE IF NOT EXISTS hashrate(miner TEXT, time DATETIME, hashes INTEGER);").run()
         this.db.prepare("CREATE TABLE IF NOT EXISTS hashrateAvg(miner TEXT, time DATETIME, hashes INTEGER);").run()

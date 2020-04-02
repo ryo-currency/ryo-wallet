@@ -105,6 +105,7 @@ export class Daemon {
                 "--limit-rate-up", options.daemon.limit_rate_up,
                 "--limit-rate-down", options.daemon.limit_rate_down,
                 "--log-level", options.daemon.log_level,
+                "--log-file-level", options.daemon.log_level,
             ];
 
             if(options.daemon.enhanced_ip_privacy) {

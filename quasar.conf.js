@@ -205,7 +205,7 @@ module.exports = function (ctx) {
 
                 appId: "com.ryo-currency.wallet",
                 productName: "Ryo Wallet Atom",
-                copyright: "Copyright © 2019 Ryo Currency Project",
+                copyright: "Copyright © 2020 Ryo Currency Project",
 
                 // directories: {
                 //     buildResources: "src-electron/build"
