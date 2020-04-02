@@ -1325,7 +1325,7 @@ export class WalletRPC {
                         this.agent.destroy()
                         resolve()
                     })
-                    this.walletRPCProcess.kill(3)
+                    this.walletRPCProcess.kill('SIGKILL')
                 }, 10000)
             } else {
                 resolve()
