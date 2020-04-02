@@ -31,7 +31,8 @@ export class WalletRPC {
 
         this.last_height_send_time = Date.now()
 
-        this.height_regex = /Pulled blocks (\d+)-(\d+) \/ (\d+)/
+        this.height_regex_1 = /Pulled blocks (\d+)-(\d+) \/ (\d+)/
+        this.height_regex_2 = /On new block (\d+) - (\w)/
 
         this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
         this.queue = new queue(1, Infinity)
@@ -108,13 +109,19 @@ export class WalletRPC {
                     let lines = data.toString().split("\n");
                     let match, height = null
                     lines.forEach((line) => {
-                        match = line.match(this.height_regex)
+                        match = line.match(this.height_regex_1)
                         if (match) {
                             height = match[2]
+                            return
+                        }
+                        match = line.match(this.height_regex_2)
+                        if (match) {
+                            height = match[1]
+                            return
                         }
                     })
 
-                    if(this.wallet_info.height === 0 && height && Date.now() - this.last_height_send_time > 1000) {
+                    if(height && height > this.wallet_info.height && Date.now() - this.last_height_send_time > 1000) {
                         this.last_height_send_time = Date.now()
                         this.sendGateway("set_wallet_data", {
                             info: {
