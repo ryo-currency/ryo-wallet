@@ -80,6 +80,13 @@
                 <div>
                     <q-checkbox v-model="notify_empty_password" label="Notify when creating or restoring a wallet with an insecure password" />
                 </div>
+                <h6 class="q-mb-md" style="font-weight: 300">Debugging</h6>
+                <div>
+                      <p>This will package the log files and other debugging information into a ZIP file.</p>
+                </div>
+                <div>
+                  <q-btn color="primary" @click="dump" label="Dump Debug Info" />
+                </div>
 
             </div>
         </div>
@@ -117,7 +124,7 @@
 </template>
 
 <script>
-import { Platform } from "quasar"
+import { Platform, Loading } from "quasar"
 import { mapState } from "vuex"
 import SettingsGeneral from "components/settings_general"
 export default {
@@ -234,6 +241,10 @@ export default {
         save() {
             this.$gateway.send("core", "save_config", this.pending_config);
             this.isVisible = false
+        },
+        dump() {
+            Loading.show();
+            this.$gateway.send("core", "dump_debug_info", {});
         },
         showPeerDetails (entry) {
             this.$q.dialog({

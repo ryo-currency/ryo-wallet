@@ -227,6 +227,39 @@ export class Gateway {
                 }, 250);
                 break
 
+            case "dump_completed":
+                Loading.hide()
+                if (process.platform === "darwin") {
+                    // Workaround for buttons not appearning on macOS
+                    Dialog.create({
+                        title: "Success",
+                        message: "Debug data dumped",
+                        ok: {
+                            label: "OK",
+                            color: "primary"
+                        },
+                        cancel: {
+                            flat: true,
+                            label: "",
+                            color: this.theme=="dark"?"white":"dark"
+                        }
+                    }).catch(() => {
+                        this.closeDialog = false
+                    })
+                }
+                else {
+                    Dialog.create({
+                        title: "Success",
+                        message: "Debug data dumped",
+                        ok: {
+                            label: "OK",
+                            color: "primary"
+                        }
+                    }).catch(() => {
+                        this.closeDialog = false
+                    })
+                }
+                break
         }
     }
 }
