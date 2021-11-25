@@ -19,6 +19,7 @@ export class Daemon {
         this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
         this.queue = new queue(1, Infinity)
 
+        this.log_file = null
     }
 
 
@@ -125,10 +126,12 @@ export class Daemon {
             if(options.app.testnet) {
                 this.testnet = true
                 args.push("--testnet")
-                args.push("--log-file", path.join(options.app.data_dir, "testnet", "logs", "ryod.log"))
+                this.log_file = path.join(options.app.data_dir, "testnet", "logs", "ryod.log")
+                args.push("--log-file", this.log_file) 
                 args.push("--add-peer", "45.77.68.151:13310")
             } else {
-                args.push("--log-file", path.join(options.app.data_dir, "logs", "ryod.log"))
+                this.log_file = path.join(options.app.data_dir, "logs", "ryod.log")
+                args.push("--log-file", this.log_file) 
             }
 
             if(options.daemon.rpc_bind_ip !== "127.0.0.1")
@@ -154,7 +157,9 @@ export class Daemon {
             this.hostname = options.daemon.rpc_bind_ip
             this.port = options.daemon.rpc_bind_port
 
-            this.daemonProcess.stdout.on("data", data => process.stdout.write(`Daemon: ${data}`))
+            this.daemonProcess.stdout.on("data", data => {
+                process.stdout.write(`Daemon: ${data}`)
+            })
             this.daemonProcess.on("error", err => process.stderr.write(`Daemon: ${err}\n`))
             this.daemonProcess.on("close", code => process.stderr.write(`Daemon: exited with code ${code}\n`))
 
