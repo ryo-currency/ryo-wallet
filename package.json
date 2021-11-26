@@ -15,6 +15,7 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
+    "archiver": "^5.3.0",
     "axios": "^0.18.1",
     "better-sqlite3": "^5.4.0",
     "big-integer": "^1.6.41",
@@ -40,8 +41,8 @@
   "devDependencies": {
     "babel-eslint": "^10.0.1",
     "devtron": "^1.4.0",
+    "electron-builder": "^21.2.0",
     "electron": "^4.0.4",
-    "electron-builder": "^20.40.2",
     "electron-debug": "^2.1.0",
     "electron-devtools-installer": "^2.2.4",
     "electron-rebuild": "^1.8.4",
@@ -54,7 +55,7 @@
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^5.1.0",
-    "node-sass": "^4.13.1",
+    "node-sass": "^4.14.1",
     "quasar-cli": "^0.17.26",
     "sass-loader": "^7.1.0",
     "strip-ansi": "^3.0.1"

@@ -6,6 +6,7 @@ import { ipcMain, dialog } from "electron";
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
+const archiver = require("archiver")
 
 export class Backend {
     constructor(mainWindow) {
@@ -16,6 +17,8 @@ export class Backend {
         this.config_dir = null
         this.config_file = null
         this.config_data = {}
+        this.daemonFilePrefix = "ryo-daemon-out"
+        this.walletdFilePrefix = "ryo-walletd-out"
     }
 
     init() {
@@ -237,8 +240,28 @@ export class Backend {
                     })
                 }
                 break;
+            case "dump_debug_info":
+                let homedir = os.homedir()
+                let desktop = `${homedir}${path.sep}Desktop${path.sep}`
+                if (!fs.existsSync(desktop)) {
+                    desktop = `${homedir}${path.sep}`
+                }
+                let dump_zip = `${desktop}ryo-wallet-dump-${new Date().toISOString().replace(/:/g,'_')}.zip`
+                let output = fs.createWriteStream(dump_zip);
+                let archive = archiver('zip');
+                archive.pipe(output);
+                let daemon = this.daemon;
+                let walletd = this.walletd;
+                let daemonFilePrefix = this.daemonFilePrefix;
+                let walletdFilePrefix = this.walletdFilePrefix;
+                archive.file(daemon.log_file, {name: `${daemonFilePrefix}.txt`})
+                archive.file(walletd.log_file, {name: `${walletdFilePrefix}.txt`})
+                archive.finalize()
+                this.send("dump_completed", {})
+                break
 
             default:
+                break
         }
     }
 
