@@ -190,9 +190,9 @@ export class Pool {
     }
 
     checkHeight() {
-        let url = "https://explorer.ryoblocks.com/api/networkinfo"
+        let url = "https://explorer.ryo-currency.com/api/networkinfo"
         if(this.testnet) {
-            url = "https://tnexp.ryoblocks.com/api/networkinfo"
+            url = "https://tnexp.ryo-currency.com/api/networkinfo"
         }
         return request(url)
     }
