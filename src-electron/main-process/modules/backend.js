@@ -58,7 +58,7 @@ export class Backend {
 
             daemon: {
                 type: "local_remote",
-                remote_host: "geo.ryoblocks.com",
+                remote_host: "wallet-node.ryo-currency.com",
                 remote_port: 12211,
                 p2p_bind_ip: "0.0.0.0",
                 p2p_bind_port: 12210,
