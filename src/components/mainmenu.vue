@@ -52,6 +52,9 @@
                     <a @click="openExternal('https://t.me/ryocurrency')" href="#">Telegram</a> -
                     <a @click="openExternal('https://discord.gg/GFQmFtx')" href="#">Discord</a> -
                     <a @click="openExternal('https://www.reddit.com/r/ryocurrency/')" href="#">Reddit</a>
+					<a @click="openExternal('https://twitter.com/RyocurrencyO')" href="#">Twitter</a> -
+                    <a @click="openExternal('https://bitcointalk.org/index.php?topic=4413010.0')" href="#">Bitcointalk</a> -
+                    <a @click="openExternal('https://github.com/ryo-currency')" href="#">Github</a>
                 </p>
             </div>
 
