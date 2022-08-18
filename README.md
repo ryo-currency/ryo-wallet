@@ -4,6 +4,10 @@ Next Generation GUI Wallet for Ryo-currency
 
 ---
 
+DESCRIPTION - [BUILD](/BUILD.md) - [LICENSE](/LICENSE)
+
+---
+
 Meet Atom, the new Electron based Ryo Wallet. Being the foundation for further development, this initial release already brings several improvements over previous GUI wallet.
 
 - Wallet switch option.
@@ -51,21 +55,8 @@ Ryo wallet will scan default folders used by Lite wallet and GUI wallet and will
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/06_wallet-receive-2-light.png)
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/07_wallet-send-light.png)
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/08_wallet-address-book-1-light.png)
-![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/09_wallet-address-book-2.png)
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/10_wallet-address-book-3-light.png)
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/11_tx-history-light.png)
 ![Ryo Wallet Screenshot](https://ryo-currency.com/img/ryo-wallet-screenshots/12_switch-wallet-light.png)
 
----
 
-### Building from source
-
-```
-npm install -g quasar-cli
-git clone https://github.com/ryo-currency/ryo-wallet
-cd ryo-wallet
-cp /path/to/ryo/binaries/ryod bin/
-cp /path/to/ryo/binaries/ryo-wallet-rpc bin/
-npm install
-quasar build -m electron -t mat
-```
