@@ -22,12 +22,7 @@ export function uid(length=15) {
 class Logger {
 
     constructor() {
-        this.buffer = ""
         this.stream = null
-
-        setInterval(() => {
-            this.write()
-        }, 60000)
     }
 
     setLogFile(path, file) {
@@ -46,7 +41,9 @@ class Logger {
         message = format(message, ...params)
         message = `${timestamp} [POOL] ${message}`
 
-        this.buffer += message+"\n"
+        if(this.stream) {
+            this.stream.write(message+"\n")
+        }
 
         const color_reset = "\x1b[0m"
         let color = color_reset
@@ -68,13 +65,6 @@ class Logger {
         console.log(color+message+color_reset)
     }
 
-    write() {
-        if(!this.stream) {
-            return
-        }
-        this.stream.write(this.buffer)
-        this.buffer = ""
-    }
 }
 
 export let logger = new Logger()

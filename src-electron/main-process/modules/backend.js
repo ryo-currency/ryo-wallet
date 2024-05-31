@@ -1,10 +1,8 @@
 import { Daemon } from "./daemon";
 import { WalletRPC } from "./wallet-rpc";
 import { Pool } from "./pool";
-import { SCEE } from "./SCEE-Node";
-import { dialog } from "electron";
+import { ipcMain, dialog } from "electron";
 
-const WebSocket = require("ws");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
@@ -15,15 +13,12 @@ export class Backend {
         this.daemon = null
         this.walletd = null
         this.pool = null
-        this.wss = null
-        this.token = null
         this.config_dir = null
         this.config_file = null
         this.config_data = {}
-        this.scee = new SCEE()
     }
 
-    init(config) {
+    init() {
 
         if(os.platform() == "win32") {
 	    this.config_dir = "C:\\ProgramData\\ryo";
@@ -56,12 +51,14 @@ export class Backend {
             preference: {
                 notify_no_payment_id: true,
                 notify_empty_password: true,
-                minimize_to_tray: false
+                minimize_to_tray: false,
+                autostart: false,
+                timeout: 600000 // 10 minutes
             },
 
             daemon: {
                 type: "local_remote",
-                remote_host: "geo.ryoblocks.com",
+                remote_host: "wallet-node.ryo-currency.com",
                 remote_port: 12211,
                 p2p_bind_ip: "0.0.0.0",
                 p2p_bind_port: 12210,
@@ -90,6 +87,7 @@ export class Backend {
                 },
                 mining: {
                     address: "",
+                    enableBlockRefreshInterval: false,
                     blockRefreshInterval: 5,
                     minerTimeout: 900,
                     uniform: true,
@@ -109,17 +107,11 @@ export class Backend {
 
         }
 
-        this.token = config.token
-
-        this.wss = new WebSocket.Server({
-            port: config.port,
-            maxPayload: Number.POSITIVE_INFINITY
+        ipcMain.on("event", (event, data) => {
+            this.receive(data)
         })
 
-        this.wss.on("connection", ws => {
-            ws.on("message", data => this.receive(data));
-        });
-
+        this.startup()
     }
 
     send(event, data={}) {
@@ -127,33 +119,24 @@ export class Backend {
             event,
             data
         }
-
-        let encrypted_data = this.scee.encryptString(JSON.stringify(message), this.token);
-
-        this.wss.clients.forEach(function each(client) {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(encrypted_data)
-            }
-        });
+        this.mainWindow.webContents.send("event", message)
     }
 
     receive(data) {
 
-        let decrypted_data = JSON.parse(this.scee.decryptString(data, this.token));
-
         // route incoming request to either the daemon, wallet, or here
-        switch (decrypted_data.module) {
+        switch (data.module) {
             case "core":
-                this.handle(decrypted_data);
+                this.handle(data);
                 break;
             case "daemon":
                 if (this.daemon) {
-                    this.daemon.handle(decrypted_data);
+                    this.daemon.handle(data);
                 }
                 break;
             case "wallet":
                 if (this.walletd) {
-                    this.walletd.handle(decrypted_data);
+                    this.walletd.handle(data);
                 }
                 break;
         }
@@ -206,9 +189,6 @@ export class Backend {
                         }
                     }
                 });
-                break;
-            case "init":
-                this.startup();
                 break;
 
             case "save_pool_config":
@@ -263,6 +243,7 @@ export class Backend {
     }
 
     startup() {
+        this.send("initialize")
         fs.readFile(this.config_file, "utf8", (err, data) => {
             if (err) {
                 this.send("set_app_data", {
@@ -301,8 +282,17 @@ export class Backend {
             // here we may want to check if config data is valid, if not also send code -1
             // i.e. check ports are integers and > 1024, check that data dir path exists, etc
 
+            // Filter out http:// from remote_host (remote daemon address)
+            if(this.config_data.daemon.remote_host.indexOf("//") !== -1) {
+                let remote_host = this.config_data.daemon.remote_host
+                remote_host = this.config_data.daemon.remote_host.split("//")
+                remote_host.shift()
+                remote_host = remote_host.join("//")
+                this.config_data.daemon.remote_host = remote_host
+            }
+
             // save config file back to file, so updated options are stored on disk
-            fs.writeFile(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8", () => {});
+            fs.writeFileSync(this.config_file, JSON.stringify(this.config_data, null, 4), "utf8");
 
 
             // get network interfaces for UI
@@ -351,6 +341,7 @@ export class Backend {
             let lmdb_dir = path.join(this.config_data.app.data_dir, "lmdb02")
             let log_dir = path.join(this.config_data.app.data_dir, "logs")
             let wallet_dir = path.join(this.config_data.app.data_dir, "wallets")
+            let gui_dir = path.join(this.config_data.app.data_dir, "gui")
 
             if(this.config_data.app.testnet) {
 
@@ -361,6 +352,7 @@ export class Backend {
                 lmdb_dir = path.join(testnet_dir, "lmdb02")
                 log_dir = path.join(testnet_dir, "logs")
                 wallet_dir = path.join(testnet_dir, "wallets")
+                gui_dir = path.join(testnet_dir, "gui")
 
             }
 
@@ -370,6 +362,8 @@ export class Backend {
                 fs.mkdirSync(log_dir);
             if (!fs.existsSync(wallet_dir))
                 fs.mkdirSync(wallet_dir)
+            if (!fs.existsSync(gui_dir))
+                fs.mkdirSync(gui_dir)
 
             // Check permissions
             try {
@@ -607,9 +601,6 @@ export class Backend {
                 process.push(this.walletd.quit())
             if(this.pool)
                 process.push(this.pool.quit())
-            if(this.wss)
-                this.wss.close();
-
             Promise.all(process).then(() => {
                 resolve()
             })

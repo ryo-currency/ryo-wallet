@@ -31,9 +31,8 @@ export class WalletRPC {
 
         this.last_height_send_time = Date.now()
 
-        this.height_regex1 = /Processed block: <([a-f0-9]+)>, height (\d+)/
-        this.height_regex2 = /Skipped block by height: (\d+)/
-        this.height_regex3 = /Skipped block by timestamp, height: (\d+)/
+        this.height_regex_1 = /Pulled blocks (\d+)-(\d+) \/ (\d+)/
+        this.height_regex_2 = /On new block (\d+) - (\w)/
 
         this.agent = new http.Agent({keepAlive: true, maxSockets: 1})
         this.queue = new queue(1, Infinity)
@@ -64,8 +63,9 @@ export class WalletRPC {
                     "--rpc-login", this.auth[0]+":"+this.auth[1],
                     "--rpc-bind-port", options.wallet.rpc_bind_port,
                     "--daemon-address", daemon_address,
-                    //"--log-level", options.wallet.log_level,
-                    "--log-level", "*:WARNING,net*:FATAL,net.http:DEBUG,global:INFO,verify:FATAL,stacktrace:INFO",
+                    "--log-file-level", options.wallet.log_level,
+                    "--log-level", "3",
+                    // "--log-level", "*:WARNING,net*:FATAL,net.http:DEBUG,global:INFO,verify:FATAL,stacktrace:INFO",
                 ]
 
                 let log_file
@@ -104,27 +104,24 @@ export class WalletRPC {
 
                 this.walletRPCProcess.stdout.on("data", (data) => {
 
-                    //process.stdout.write(`Wallet: ${data}`)
+                    // process.stdout.write(`Wallet: ${data}`)
 
                     let lines = data.toString().split("\n");
                     let match, height = null
                     lines.forEach((line) => {
-                        match = line.match(this.height_regex1)
+                        match = line.match(this.height_regex_1)
                         if (match) {
                             height = match[2]
-                        } else {
-                            match = line.match(this.height_regex2)
-                            if (match) {
-                                height = match[1]
-                            } else {
-                                match = line.match(this.height_regex3)
-                                if (match) {
-                                    height = match[1]
-                                }
-                            }
+                            return
+                        }
+                        match = line.match(this.height_regex_2)
+                        if (match) {
+                            height = match[1]
+                            return
                         }
                     })
-                    if(height && Date.now() - this.last_height_send_time > 1000) {
+
+                    if(height && height > this.wallet_info.height && Date.now() - this.last_height_send_time > 1000) {
                         this.last_height_send_time = Date.now()
                         this.sendGateway("set_wallet_data", {
                             info: {
@@ -133,8 +130,8 @@ export class WalletRPC {
                         })
                     }
                 })
-                this.walletRPCProcess.on("error", err => process.stderr.write(`Wallet: ${err}`))
-                this.walletRPCProcess.on("close", code => process.stderr.write(`Wallet: exited with code ${code}`))
+                this.walletRPCProcess.on("error", err => process.stderr.write(`Wallet: ${err}\n`))
+                this.walletRPCProcess.on("close", code => process.stderr.write(`Wallet: exited with code ${code}\n`))
 
                 // To let caller know when the wallet is ready
                 let intrvl = setInterval(() => {
@@ -261,7 +258,7 @@ export class WalletRPC {
             this.wallet_state.name = filename
             this.wallet_state.open = true
 
-            this.finalizeNewWallet(filename)
+            this.finalizeNewWallet(filename, true)
 
         })
 
@@ -291,6 +288,21 @@ export class WalletRPC {
             refresh_start_height = 0
         }
         seed = seed.trim().replace(/\s{2,}/g, " ")
+
+        let seed_words = seed.split(" ")
+        switch(seed_words.length) {
+            case 14:
+            case 24:
+            case 25:
+                break
+            case 26:
+                seed_words.pop()
+                seed = seed_words.join(" ")
+                break
+            default:
+                this.sendGateway("set_wallet_error", {status: {code: -1, message:"Invalid seed word length"}})
+                return
+        }
 
         this.sendRPC("restore_wallet", {
             filename,
@@ -424,7 +436,7 @@ export class WalletRPC {
 
     }
 
-    finalizeNewWallet(filename) {
+    finalizeNewWallet(filename, newly_created=false) {
 
         Promise.all([
             this.sendRPC("get_address"),
@@ -441,7 +453,8 @@ export class WalletRPC {
                     balance: 0,
                     unlocked_balance: 0,
                     height: 0,
-                    view_only: false
+                    view_only: false,
+                    newly_created
                 },
                 secret: {
                     mnemonic: "",
@@ -1312,8 +1325,8 @@ export class WalletRPC {
                         this.agent.destroy()
                         resolve()
                     })
-                    this.walletRPCProcess.kill()
-                }, 2500)
+                    this.walletRPCProcess.kill('SIGKILL')
+                }, 10000)
             } else {
                 resolve()
             }

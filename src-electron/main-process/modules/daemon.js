@@ -105,6 +105,7 @@ export class Daemon {
                 "--limit-rate-up", options.daemon.limit_rate_up,
                 "--limit-rate-down", options.daemon.limit_rate_down,
                 "--log-level", options.daemon.log_level,
+                "--log-file-level", options.daemon.log_level,
             ];
 
             if(options.daemon.enhanced_ip_privacy) {
@@ -153,11 +154,9 @@ export class Daemon {
             this.hostname = options.daemon.rpc_bind_ip
             this.port = options.daemon.rpc_bind_port
 
-            this.daemonProcess.stdout.on("data", data => {
-                //process.stdout.write(`Daemon: ${data}`)
-            })
-            this.daemonProcess.on("error", err => process.stderr.write(`Daemon: ${err}`))
-            this.daemonProcess.on("close", code => process.stderr.write(`Daemon: exited with code ${code}`))
+            this.daemonProcess.stdout.on("data", data => process.stdout.write(`Daemon: ${data}`))
+            this.daemonProcess.on("error", err => process.stderr.write(`Daemon: ${err}\n`))
+            this.daemonProcess.on("close", code => process.stderr.write(`Daemon: exited with code ${code}\n`))
 
             // To let caller know when the daemon is ready
             let intrvl = setInterval(() => {
@@ -172,7 +171,8 @@ export class Daemon {
                             // Ignore
                         } else {
                             clearInterval(intrvl);
-                            reject(error);
+                            process.stdout.write(data);
+                            reject(data.error);
                         }
                     }
                 })
@@ -337,9 +337,9 @@ export class Daemon {
                     continue
                 if(n.method == "get_info") {
                     daemon_info.info = n.result
+                    this.daemon_info = n.result
                 }
             }
-            this.daemon_info = daemon_info.info
             this.sendGateway("set_daemon_data", daemon_info)
         })
     }

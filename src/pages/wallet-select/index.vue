@@ -1,5 +1,13 @@
 <template>
 <q-page>
+    <template v-if="!wallets.list.length">
+        <div class="q-px-md q-py-lg">
+            <h2 class="q-my-sm text-weight-thin">Welcome to Ryo Wallet Atom</h2>
+            <p>To get started, select one of the options below.</p>
+
+        </div>
+    </template>
+
 
     <q-list link no-border :dark="theme=='dark'">
         <template v-if="wallets.list.length">
@@ -46,23 +54,40 @@
             <q-item-separator />
         </template>
         <q-item @click.native="createNewWallet()">
+            <q-item-side>
+                <q-icon name="add_circle_outline" size="40px" />
+            </q-item-side>
             <q-item-main label="Create new wallet" />
         </q-item>
         <q-item @click.native="restoreWallet()">
+            <q-item-side>
+                <q-icon name="input" size="40px" />
+            </q-item-side>
             <q-item-main label="Restore wallet from seed" />
         </q-item>
         <q-item @click.native="restoreViewWallet()">
+            <q-item-side>
+                <q-icon name="remove_red_eye" size="40px" />
+            </q-item-side>
             <q-item-main label="Restore view-only wallet" />
         </q-item>
         <q-item @click.native="importWallet()">
+            <q-item-side>
+                <q-icon name="file_copy" size="40px" />
+            </q-item-side>
             <q-item-main label="Import wallet from file" />
         </q-item>
         <template v-if="wallets.legacy.length">
             <q-item @click.native="importLegacyWallet()">
+                <q-item-side>
+                    <q-icon name="file_copy" size="40px" />
+                </q-item-side>
                 <q-item-main label="Import wallet from legacy gui" />
             </q-item>
         </template>
     </q-list>
+
+    <WalletLoading ref="loading" />
 
 </q-page>
 </template>
@@ -71,6 +96,7 @@
 const { clipboard } = require("electron")
 import { mapState } from "vuex"
 import Identicon from "components/identicon"
+import WalletLoading from "components/wallet_loading"
 export default {
     computed: mapState({
         theme: state => state.gateway.app.config.appearance.theme,
@@ -96,17 +122,13 @@ export default {
                         color: this.theme=="dark"?"white":"dark"
                     }
                 }).then(password => {
-                    this.$q.loading.show({
-                        delay: 0
-                    })
+                    this.$refs.loading.show()
                     this.$gateway.send("wallet", "open_wallet", {name: wallet.name, password: password});
                 })
                 .catch(() => {
                 })
             } else {
-                this.$q.loading.show({
-                    delay: 0
-                })
+                this.$refs.loading.show()
                 this.$gateway.send("wallet", "open_wallet", {name: wallet.name, password: ""});
             }
         },
@@ -147,12 +169,12 @@ export default {
                 if(val.code == old.code) return
                 switch(this.status.code) {
                     case 0: // Wallet loaded
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$router.replace({ path: "/wallet" });
                         break;
                     case -1: // Error
                     case -22:
-                        this.$q.loading.hide()
+                        this.$refs.loading.hide()
                         this.$q.notify({
                             type: "negative",
                             timeout: 1000,
@@ -170,7 +192,8 @@ export default {
         }
     },
     components: {
-        Identicon
+        Identicon,
+        WalletLoading
     }
 }
 </script>

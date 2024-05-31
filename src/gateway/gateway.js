@@ -1,6 +1,5 @@
 import { ipcRenderer } from "electron"
-import { Notify, Dialog, Loading, LocalStorage } from "quasar"
-import { SCEE } from "./SCEE-Node";
+import { debounce, Notify, Dialog, Loading, LocalStorage } from "quasar"
 
 export class Gateway {
 
@@ -8,8 +7,6 @@ export class Gateway {
 
         this.app = app
         this.router = router
-        this.token = null
-        this.scee = new SCEE()
 
         let theme = LocalStorage.has("theme") ? LocalStorage.get.item("theme") : "light"
         this.app.store.commit("gateway/set_app_data", {
@@ -46,14 +43,9 @@ export class Gateway {
             }
         });
 
-        ipcRenderer.on("initialize", (event, data) => {
-            this.token = data.token
-            setTimeout(() => {
-                this.ws = new WebSocket("ws://127.0.0.1:"+data.port);
-                this.ws.addEventListener("open", () => {this.open()});
-                this.ws.addEventListener("message", (event) => {this.receive(event.data)});
-            }, 1000);
-        });
+        ipcRenderer.on("event", (event, data) => {
+            this.receive(data)
+        })
 
         ipcRenderer.on("confirmClose", () => {
             this.confirmClose("Are you sure you want to exit?")
@@ -63,27 +55,61 @@ export class Gateway {
             this.confirmMinimizeTray()
         });
 
+        this.inactiveTimeout = null
+        let applyInactiveTimeout = (timeout) => {
+            this.resetInactiveTimeoutFn = debounce(() => {
+                if(this.inactiveTimeout !== null) {
+                    clearTimeout(this.inactiveTimeout)
+                }
+                this.inactiveTimeout = setTimeout(() => {
+                    if(this.app.store.state.gateway.wallet.status.code === 0 && this.app.store.getters["gateway/isAbleToSend"]) {
+                        this.send("wallet", "close_wallet")
+                        this.receive({ event: "return_to_wallet_select", data: {}})
+                        Dialog.create({
+                            title: "Timeout",
+                            message: "You have been logged out due to inactivity.",
+                            ok: {
+                                label: "OK"
+                            }
+                        }).catch(() => {
+                            this.closeDialog = false
+                        })
+
+                    } else {
+                        this.resetInactiveTimeoutFn()
+                    }
+                }, timeout)
+            }, 300)
+        }
+        applyInactiveTimeout(this.app.store.state.gateway.app.config.preference.timeout)
+        this.app.store.watch( state => state.gateway.app.config.preference.timeout, (timeout) => {
+            applyInactiveTimeout(timeout)
+        })
+        let events = ["mousemove", "touchmove", "keypress"]
+        for(let i in events) {
+            window.addEventListener(events[i], () => {
+                if(typeof this.resetInactiveTimeoutFn === "function") {
+                    this.resetInactiveTimeoutFn()
+                }
+            })
+        }
+
     }
 
-    open() {
-        this.app.store.commit("gateway/set_app_data", {
-            status: {
-                code: 2 // Loading config
-            }
-        });
-        this.send("core", "init");
+    setAutostartSettings(enabled) {
+        ipcRenderer.send("autostartSettings", enabled)
     }
 
-    confirmClose(msg) {
+    confirmClose(msg, restart = false) {
         if(this.closeDialog) {
             return
         }
         this.closeDialog = true
         Dialog.create({
-            title: "Exit",
+            title: restart ? "Restart" : "Exit",
             message: msg,
             ok: {
-                label: "EXIT"
+                label: restart ? "RESTART" : "EXIT",
             },
             cancel: {
                 flat: true,
@@ -94,7 +120,7 @@ export class Gateway {
             this.closeDialog = false
             Loading.hide()
             this.router.replace({ path: "/quit" })
-            ipcRenderer.send("confirmClose")
+            ipcRenderer.send("confirmClose", restart)
         }).catch(() => {
             this.closeDialog = false
         })
@@ -134,51 +160,53 @@ export class Gateway {
             method,
             data
         }
-        let encrypted_data = this.scee.encryptString(JSON.stringify(message), this.token);
-        this.ws.send(encrypted_data);
-
+        ipcRenderer.send("event", message)
     }
 
     receive(message) {
 
-        // should wrap this in a try catch, and if fail redirect to error screen
-        // shouldn't happen outside of dev environment
-        let decrypted_data = JSON.parse(this.scee.decryptString(message, this.token));
-
-        if (typeof decrypted_data !== "object" ||
-            !decrypted_data.hasOwnProperty("event") ||
-            !decrypted_data.hasOwnProperty("data"))
+        if (typeof message !== "object" ||
+            !message.hasOwnProperty("event") ||
+            !message.hasOwnProperty("data"))
             return
 
-        switch (decrypted_data.event) {
+        switch (message.event) {
+
+            case "initialize":
+                this.app.store.commit("gateway/set_app_data", {
+                    status: {
+                        code: 2 // Loading config
+                    }
+                })
+                break
 
             case "set_app_data":
-                this.app.store.commit("gateway/set_app_data", decrypted_data.data)
+                this.app.store.commit("gateway/set_app_data", message.data)
                 break
 
             case "set_daemon_data":
-                this.app.store.commit("gateway/set_daemon_data", decrypted_data.data)
+                this.app.store.commit("gateway/set_daemon_data", message.data)
                 break
 
             case "set_pool_data":
-                this.app.store.commit("gateway/set_pool_data", decrypted_data.data)
+                this.app.store.commit("gateway/set_pool_data", message.data)
                 break
 
             case "set_wallet_data":
             case "set_wallet_error":
-                this.app.store.commit("gateway/set_wallet_data", decrypted_data.data)
+                this.app.store.commit("gateway/set_wallet_data", message.data)
                 break
 
             case "set_tx_status":
-                this.app.store.commit("gateway/set_tx_status", decrypted_data.data)
+                this.app.store.commit("gateway/set_tx_status", message.data)
                 break
 
             case "wallet_list":
-                this.app.store.commit("gateway/set_wallet_list", decrypted_data.data)
+                this.app.store.commit("gateway/set_wallet_list", message.data)
                 break
 
             case "settings_changed_reboot":
-                this.confirmClose("Changes require restart. Would you like to exit now?")
+                this.confirmClose("Changes require restart. Would you like to restart now?", true)
                 break
 
             case "show_notification":
@@ -187,7 +215,7 @@ export class Gateway {
                     timeout: 1000,
                     message: ""
                 }
-                Notify.create(Object.assign(notification, decrypted_data.data))
+                Notify.create(Object.assign(notification, message.data))
                 break
 
             case "return_to_wallet_select":

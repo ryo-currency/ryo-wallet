@@ -1,7 +1,7 @@
 import { app, ipcMain, BrowserWindow, Menu, Tray, dialog } from "electron"
 import { Backend } from "./modules/backend"
 import menuTemplate from "./menu"
-const portscanner = require("portscanner")
+import isDev from "electron-is-dev"
 const windowStateKeeper = require("electron-window-state")
 const path = require("path");
 
@@ -21,30 +21,14 @@ let showConfirmClose = true
 let forceQuit = false
 let updateTrayInterval = null
 
-const portInUse = function(port, callback) {
-    var server = net.createServer(function(socket) {
-        socket.write("Echo server\r\n");
-        socket.pipe(socket);
-    });
-
-    server.listen(port, "127.0.0.1");
-    server.on("error", function (e) {
-        callback(true);
-    });
-    server.on("listening", function (e) {
-        server.close();
-        callback(false);
-    });
-};
-
 function createWindow() {
     /**
      * Initial window options
      */
 
     let mainWindowState = windowStateKeeper({
-        defaultWidth: 800,
-        defaultHeight: 650
+        defaultWidth: 1010,
+        defaultHeight: 800
     })
 
     mainWindow = new BrowserWindow({
@@ -82,8 +66,13 @@ function createWindow() {
         }
     })
 
-    ipcMain.on("confirmClose", (e) => {
+    ipcMain.on("confirmClose", (e, restart) => {
         showConfirmClose = false
+
+        if(restart && !isDev) {
+            app.relaunch()
+        }
+
         if (backend) {
             if (process.platform !== "darwin") {
                 clearInterval(updateTrayInterval)
@@ -115,6 +104,12 @@ function createWindow() {
         }
     })
 
+    ipcMain.on("autostartSettings", (e, openAtLogin) => {
+        app.setLoginItemSettings({
+            openAtLogin
+        })
+    })
+
     ipcMain.on("confirmMinimizeTray", (e, minimize_to_tray) => {
         mainWindow.setMinimizable(true)
         backend.config_data.preference.minimize_to_tray = minimize_to_tray
@@ -126,39 +121,8 @@ function createWindow() {
     })
 
     mainWindow.webContents.on("did-finish-load", () => {
-
-        require("crypto").randomBytes(64, (err, buffer) => {
-
-            // if err, then we may have to use insecure token generation perhaps
-            if (err) throw err;
-
-            let config = {
-                port: 12213,
-                token: buffer.toString("hex")
-            }
-
-            portscanner.checkPortStatus(config.port, "127.0.0.1", (error, status) => {
-                if (status == "closed") {
-                    backend = new Backend(mainWindow)
-                    backend.init(config)
-                    mainWindow.webContents.send("initialize", config)
-                } else {
-                    dialog.showMessageBox(mainWindow, {
-                        title: "Startup error",
-                        message: `Ryo Wallet is already open, or port ${config.port} is in use`,
-                        type: "error",
-                        buttons: ["ok"]
-                    }, () => {
-                        showConfirmClose = false
-                        app.quit()
-                    })
-
-                }
-
-            })
-
-        })
-
+        backend = new Backend(mainWindow)
+        backend.init()
     })
 
     mainWindow.loadURL(process.env.APP_URL)

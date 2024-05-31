@@ -26,11 +26,14 @@ export class Pool {
             startup: null,
             job: null,
             timeout: null,
+            watchdog: null,
             retarget: null,
             stats: null
         }
 
         const { data_dir, testnet } = backend.config_data.app
+
+        this.testnet = testnet
 
         if(testnet) {
             this.nettype = ryo_utils_nettype.network_type.TESTNET
@@ -59,6 +62,14 @@ export class Pool {
             }
 
         })
+
+        this.checkHeight().then(response => {
+            logger.log("info", "Contacted remote API -- watchdog is active")
+            logger.log("info", response)
+        }).catch(() => {
+            logger.log("warn", "Could not contact remote API")
+        })
+
     }
 
     init(options) {
@@ -119,7 +130,7 @@ export class Pool {
 
         } catch(error) {
             logger.log("error", "Failed to start pool")
-            logger.log("error", JSON.stringify(error))
+            logger.log("error", error)
             this.sendGateway("show_notification", {type: "negative", message: "Pool failed to start", timeout: 2000})
         }
     }
@@ -178,20 +189,25 @@ export class Pool {
         })
     }
 
+    checkHeight() {
+        let url = "https://explorer.ryo-currency.com/api/networkinfo"
+        if(this.testnet) {
+            url = "https://tnexp.ryo-currency.com/api/networkinfo"
+        }
+        return request(url)
+    }
+
     statsHeartbeat() {
         this.sendGateway("set_pool_data", this.database.heartbeat())
     }
 
     startHeartbeat() {
-        if(this.intervals.job) {
-            clearInterval(this.intervals.job)
-        }
         if(this.intervals.timeout) {
             clearInterval(this.intervals.timeout)
         }
-        this.intervals.job = setInterval(() => {
-            this.getBlock().catch(() => {})
-        }, this.config.mining.blockRefreshInterval * 1000)
+        if(this.intervals.watchdog) {
+            clearInterval(this.intervals.watchdog)
+        }
 
         this.intervals.timeout = setInterval(() => {
             for(let connection_id in this.connections) {
@@ -204,7 +220,67 @@ export class Pool {
             }
         }, 30000)
 
+        this.intervals.watchdog = setInterval(() => {
+            this.watchdog()
+        }, 240000)
+        this.watchdog()
+
+        this.startJobRefreshInterval()
+
         this.startRetargetInterval()
+    }
+
+    watchdog() {
+        // check for desynced daemon and incorrect local clock
+        this.checkHeight().then(response => {
+            try {
+                const json = JSON.parse(response)
+                if(json === null || typeof json !== "object" || !json.hasOwnProperty("data")) {
+                    return
+                }
+                let desynced = false, system_clock_error = false
+                if(json.data.hasOwnProperty("height") && this.blocks.current != null) {
+                    const remote_height = json.data.height
+                    desynced = this.blocks.current.height < remote_height - 5
+                    if(desynced) {
+                        logger.log("error", "Pool height is desynced { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
+                    } else {
+                        logger.log("info", "Pool height is okay { remote: %d, local: %d }", [remote_height, this.blocks.current.height])
+                    }
+                }
+                if(json.data.hasOwnProperty("server_time")) {
+                    const allowed_time_variance = 15 * 60 // 15 minutes
+                    const server_time = json.data.server_time
+                    const system_time = Math.floor(Date.now() / 1000)
+                    system_clock_error = Math.abs(server_time - system_time) > allowed_time_variance
+                    if(system_clock_error) {
+                        logger.log("error", "System clock is not correct { server: %d, local: %d }", [server_time, system_time])
+                    } else {
+                        logger.log("info", "System clock is okay { server: %d, local: %d }", [server_time, system_time])
+                    }
+                }
+                this.sendGateway("set_pool_data", { desynced, system_clock_error })
+            } catch(error) {
+            }
+        }).catch(() => {
+        })
+    }
+
+    startJobRefreshInterval() {
+
+        let blockRefreshInterval = 1 * 1000 // 1 second
+        if(this.config.mining.enableBlockRefreshInterval) {
+            if(!Number.isNaN(this.config.mining.blockRefreshInterval * 1000)) {
+                blockRefreshInterval = this.config.mining.blockRefreshInterval * 1000
+            }
+        }
+
+        if(this.intervals.job) {
+            clearInterval(this.intervals.job)
+        }
+        this.intervals.job = setInterval(() => {
+            this.getBlock().catch(() => {})
+        }, blockRefreshInterval)
     }
 
     startRetargetInterval() {
@@ -269,7 +345,7 @@ export class Pool {
                     }
                 }).on("error", error => {
                     if(error.code !== "ECONNRESET") {
-                        logger.log("warn", "Socket error from %s - %j", [socket.remoteAddress, err])
+                        logger.log("warn", "Socket error from %s - %j", [socket.remoteAddress, error])
                     }
                 }).on("close", () => {
                     logger.log("warn", "Socket closed from %s@%s", [socket.workerName, socket.remoteAddress])
@@ -409,6 +485,7 @@ export class Pool {
 
                 this.processShare(job, block, nonce, hash).then(result => {
                     logger.log("info", "Accepted share { difficulty: %d, actual: %d } from %s@%s", [job.difficulty, result.diff, miner.workerName, miner.ip])
+                    reply(null, { status: "OK" })
                     if(result.hash) {
                         logger.log("success", "Block found { hash: %s, height: %d } by %s@%s", [result.hash, job.height, miner.workerName, miner.ip])
                         this.database.recordShare(miner, job, true, result.hash, block)
@@ -417,7 +494,6 @@ export class Pool {
                     }
                     miner.heartbeat()
                     miner.recordShare()
-                    reply(null, { status: "OK" })
                 }).catch(error => {
                     logger.log("info", "Rejected share { difficulty: %d, actual: %d } from %s@%s", [job.difficulty, error.diff, miner.workerName, miner.ip])
                     logger.log("error", "%s { height: %d } from worker %s@%s", [error.message, job.height, miner.workerName, miner.ip])
@@ -467,9 +543,6 @@ export class Pool {
                     }
                     this.getBlock().catch(() => {})
                     return resolve({ hash: block_fast_hash, diff: hash_diff })
-                }).catch(error => {
-                    logger.log("error", JSON.stringify(error))
-                    return reject({ message: "Error submitting block", diff: hash_diff })
                 })
             } else if(hash_diff.lt(job.difficulty)) {
                 return reject({ message: "Rejected low difficulty share", diff: hash_diff })
@@ -600,6 +673,9 @@ export class Pool {
             if(this.intervals.timeout) {
                 clearInterval(this.intervals.timeout)
             }
+            if(this.intervals.watchdog) {
+                clearInterval(this.intervals.watchdog)
+            }
             if(this.intervals.retarget) {
                 clearInterval(this.intervals.retarget)
             }
@@ -613,7 +689,6 @@ export class Pool {
                 logger.log("warn", "Closing server")
                 this.server.close(() => {
                     logger.log("warn", "Server closed")
-                    logger.write()
                     resolve()
                 })
             } else {

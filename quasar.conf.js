@@ -86,6 +86,8 @@ module.exports = function (ctx) {
                 "QStepper",
                 "QStepperNavigation",
                 "QSpinner",
+                "QSlider",
+                "QChip",
                 "QList",
                 "QListHeader",
                 "QItem",
@@ -203,20 +205,20 @@ module.exports = function (ctx) {
 
                 appId: "com.ryo-currency.wallet",
                 productName: "Ryo Wallet Atom",
-                copyright: "Copyright © 2019 Ryo Currency Project",
+                copyright: "Copyright © 2022 Ryo Currency Project",
 
                 // directories: {
                 //     buildResources: "src-electron/build"
                 // },
 
                 linux: {
-                    target: ["AppImage", "snap", "tar.xz"],
+                    target: ["AppImage"],
                     icon: "src-electron/icons/icon_512x512.png",
                     category: "Finance"
                 },
 
                 win: {
-                    target: ["7z", "zip"],
+                    target: ["zip"],
                     icon: "src-electron/icons/icon.ico"
                 },
 

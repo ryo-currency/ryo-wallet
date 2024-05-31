@@ -15,6 +15,7 @@ export class Database {
         } else {
             this.sqlitePath = join(options.data_dir, "gui", "pool_stats.sqlite")
         }
+        this.vacuum_interval = 1000 * 60 * 60 * 24 // 24 hours
     }
 
     start() {
@@ -50,8 +51,15 @@ export class Database {
 
             hashrate_avg: this.db.prepare("SELECT * FROM hashrateAvg"),
             hashrate_avg_add: this.db.prepare("INSERT OR IGNORE INTO hashrateAvg(miner, time, hashes) VALUES(:miner, :time, :hashes)"),
-            hashrate_avg_clean: this.db.prepare("DELETE FROM hashrate WHERE time < :time"),
+            hashrate_avg_clean: this.db.prepare("DELETE FROM hashrateAvg WHERE time < :time"),
         }
+
+
+        this.vacuum()
+
+        setInterval(() => {
+            this.vacuum()
+        }, this.vacuum_interval)
 
     }
 
@@ -65,7 +73,20 @@ export class Database {
         return this.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()
     }
 
+    vacuum() {
+        if(!this.db) {
+            return
+        }
+        try {
+            this.db.exec("VACUUM")
+            logger.log("info", "Success vacuuming database")
+        } catch(error) {
+            logger.log("error", "Error vacuuming database")
+        }
+    }
+
     init() {
+        this.db.pragma("journal_mode = WAL");
         this.db.prepare("CREATE TABLE IF NOT EXISTS round(miner TEXT PRIMARY KEY, hashes INTEGER) WITHOUT ROWID;").run()
         this.db.prepare("CREATE TABLE IF NOT EXISTS hashrate(miner TEXT, time DATETIME, hashes INTEGER);").run()
         this.db.prepare("CREATE TABLE IF NOT EXISTS hashrateAvg(miner TEXT, time DATETIME, hashes INTEGER);").run()
@@ -112,12 +133,6 @@ export class Database {
         this.cleanStats()
 
         const blockHashes = Object.keys(blocks)
-        let averageEffort = 0
-        for(let hash of blockHashes) {
-            let block = blocks[hash]
-            averageEffort += block.hashes / block.diff
-        }
-        averageEffort /= blockHashes.length
 
         let diff = 0
         let height = 0
@@ -125,8 +140,22 @@ export class Database {
             diff = this.pool.blocks.current.difficulty
             height = this.pool.blocks.current.height
         }
+
+        let averageEffort = 0
+        if(blockHashes.length) {
+            for(let hash of blockHashes) {
+                let block = blocks[hash]
+                averageEffort += block.hashes / block.diff
+            }
+            averageEffort /= blockHashes.length
+        }
+
         const roundHashes = this.getRoundHashes()
-        const effort = Math.round(100 * roundHashes / diff) / 100
+        let effort = 0
+        if(diff != 0) {
+            effort = Math.round(100 * roundHashes / diff) / 100
+        }
+
         const blocksFound = Object.keys(blocks).length
         const networkHashrate = diff / 240
         const blockTime = 1000 * 240 * networkHashrate / h.hashrate_5min
@@ -249,10 +278,7 @@ export class Database {
 
         let hashrates = {}
         for(const h of this.stmt.hashrate_calc.all({ start_time, end_time })) {
-            if(n_time > 300) {
-                n_time = Math.max(300, (end_time - h.start_time) / 1000)
-            }
-            hashrates[h.miner] = Math.round(100 * h.hashes / n_time) / 100
+            hashrates[h.miner] = Math.round(100 * h.hashes / Math.max(300, (end_time - h.start_time) / 1000) ) / 100
         }
         return hashrates
     }
