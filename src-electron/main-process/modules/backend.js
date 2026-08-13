@@ -207,7 +207,7 @@ export class Backend {
             case "open_explorer":
                 let explorer_url = "https://explorer.ryo-currency.com"
                 if(this.config_data.app.testnet) {
-                    explorer_url = "https://tnexp.ryoblocks.com"
+                    explorer_url = "https://tnexp.ryo-currency.com"
                 }
                 if(params.type == "tx") {
                     require("electron").shell.openExternal(`${explorer_url}/tx/${params.id}`)
